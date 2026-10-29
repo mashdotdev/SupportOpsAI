@@ -20,8 +20,10 @@ export const Navbar = () => {
   const navRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
+    const delay = sessionStorage.getItem("first-visit") ? 0.4 : 3;
+
     gsap.from(navRef.current, {
-      delay: 0.4,
+      delay,
       clipPath: "inset(0% 50% 0% 50%)",
       duration: 1,
       ease: "power3.inOut",
@@ -31,7 +33,7 @@ export const Navbar = () => {
   return (
     <div
       ref={navRef}
-      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] border border-[#7DBBC3]  left-1/2 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden rounded-md bg-[#0a0a0a] text-[#faf5ef] shadow-xl lg:w-[85%] xl:w-[75%]"
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] border border-[#7DBBC3]  left-1/2 z-999 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden rounded-md bg-[#0a0a0a] text-[#faf5ef] shadow-xl lg:w-[85%] xl:w-[75%]"
       onKeyDown={(event) => {
         if (event.key === "Escape" && isOpen) {
           setIsOpen(false);

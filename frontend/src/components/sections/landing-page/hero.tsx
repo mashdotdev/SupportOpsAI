@@ -1,9 +1,113 @@
+"use client";
+
 import Link from "next/link";
 import { IoArrowUpOutline } from "react-icons/io5";
 
+import image1 from "@public/images/ana.jpg";
+import image2 from "@public/images/ana2.jpg";
+import image3 from "@public/images/ana3.jpg";
+import image4 from "@public/images/ana4.jpg";
+import Image, { StaticImageData } from "next/image";
+import { useEffect, useRef, useState } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { useLenis } from "lenis/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const IMAGES: StaticImageData[] = [image1, image2, image3, image4, image1];
+
 export const Hero = () => {
+  const [isAnimating, setIsAnimating] = useState(true);
+  const [isFirstVisit, setIsFirstVisit] = useState(true);
+
+  const root = useRef<HTMLDivElement | null>(null);
+  const boxesRef = useRef<(HTMLDivElement | null)[]>([]);
+  const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
+
+  const lenis = useLenis();
+
+  useEffect(() => {
+    if (isAnimating && !sessionStorage.getItem("first-visit")) lenis?.stop();
+    else lenis?.start();
+  }, [lenis, isAnimating]);
+
+  useGSAP(
+    () => {
+      const section = root.current!;
+      const boxes = boxesRef.current.filter(
+        (box): box is HTMLDivElement => box !== null,
+      );
+      const images = imagesRef.current.filter(
+        (image): image is HTMLImageElement => image !== null,
+      );
+
+      if (sessionStorage.getItem("first-visit")) {
+        gsap.to(images, {
+          yPercent: 12,
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+        return;
+      }
+
+      const stage = section.getBoundingClientRect();
+      const boxesRects = boxes.map((box) => box!.getBoundingClientRect());
+
+      const startingWidth = Math.min(stage.width * 0.2, 300);
+      const startingHeight = startingWidth * (4 / 3);
+      const centerY = stage.top + (stage.height - startingHeight) / 2;
+      const centerX = stage.left + (stage.width - startingWidth) / 2;
+
+      gsap.set(boxes, {
+        height: startingHeight,
+        width: startingWidth,
+        x: (index) => centerX - boxesRects[index].left,
+        y: (index) => centerY - boxesRects[index].top,
+        clipPath: "inset(100% 0% 0% 0%)",
+      });
+
+      const tl = gsap.timeline({
+        delay: 0.3,
+        onComplete: () => {
+          gsap.set(boxes, {
+            clearProps: "transform,height,width,clipPath",
+          });
+          sessionStorage.setItem("first-visit", "true");
+          setIsFirstVisit(false);
+          setIsAnimating(false);
+        },
+      });
+
+      tl.to(boxes, {
+        clipPath: "inset(0% 0% 0% 0%)",
+        duration: 1,
+        stagger: 0.2,
+        ease: "power3.inOut",
+      }).to(
+        boxes,
+        {
+          x: 0,
+          y: 0,
+          height: (index) => boxesRects[index].height,
+          width: (index) => boxesRects[index].width,
+          duration: 1.5,
+          stagger: 0.04,
+          ease: "power3.inOut",
+        },
+        "+=0.5",
+      );
+    },
+    { scope: root, revertOnUpdate: true, dependencies: [isFirstVisit] },
+  );
+
   return (
-    <section className="relative min-h-svh">
+    <section ref={root} className="relative min-h-svh hero-section">
       <div className="flex h-svh flex-col">
         {/*top*/}
         <div
@@ -82,7 +186,32 @@ export const Hero = () => {
         </div>
 
         {/*bottom*/}
-        <div className="min-h-48 flex-2"></div>
+        <div className="flex-2 flex flex-col lg:flex-row gap-[1svh]">
+          {IMAGES.map((src, index) => (
+            <div
+              key={index}
+              className="relative min-w-0 w-full aspect-3/4 flex-1 lg:max-w-[min(28vw,38svh)]"
+            >
+              <div
+                ref={(el) => {
+                  boxesRef.current[index] = el;
+                }}
+                className="absolute inset-0 overflow-hidden rounded-md"
+              >
+                <Image
+                  ref={(el) => {
+                    imagesRef.current[index] = el;
+                  }}
+                  priority
+                  src={src}
+                  alt=""
+                  draggable={false}
+                  className="size-full block object-cover scale-115"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
