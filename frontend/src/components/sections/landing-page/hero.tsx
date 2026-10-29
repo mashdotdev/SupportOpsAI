@@ -4,9 +4,9 @@ import Link from "next/link";
 import { IoArrowUpOutline } from "react-icons/io5";
 
 import image1 from "@public/images/ana.jpg";
-import image2 from "@public/images/ana2.jpg";
-import image3 from "@public/images/ana3.jpg";
-import image4 from "@public/images/ana4.jpg";
+import image2 from "@public/images/Futuristic AI Knowledge Graph.png";
+import image3 from "@public/images/Teal Cybernetic Data Flow.png";
+import image4 from "@public/images/Neon Green Orbital Energy Core.png";
 import Image, { StaticImageData } from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
@@ -16,7 +16,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const IMAGES: StaticImageData[] = [image1, image2, image3, image4, image1];
+const IMAGES: StaticImageData[] = [image2, image2, image3, image4, image3];
 
 export const Hero = () => {
   const [isAnimating, setIsAnimating] = useState(true);
@@ -108,7 +108,7 @@ export const Hero = () => {
 
   return (
     <section ref={root} className="relative min-h-svh hero-section">
-      <div className="flex h-svh flex-col">
+      <div className="flex min-h-svh flex-col">
         {/*top*/}
         <div
           aria-labelledby="hero-title"
@@ -186,11 +186,11 @@ export const Hero = () => {
         </div>
 
         {/*bottom*/}
-        <div className="flex-2 flex flex-col lg:flex-row gap-[1svh]">
+        <div className="flex flex-col lg:flex-2 lg:flex-row gap-[1svh]">
           {IMAGES.map((src, index) => (
             <div
               key={index}
-              className="relative min-w-0 w-full aspect-3/4 flex-1 lg:max-w-[min(28vw,38svh)]"
+              className="relative min-w-0 w-full aspect-3/4 flex-none lg:flex-1 lg:max-w-[min(28vw,38svh)]"
             >
               <div
                 ref={(el) => {
