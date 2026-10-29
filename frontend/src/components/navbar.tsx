@@ -31,7 +31,7 @@ export const Navbar = () => {
   return (
     <div
       ref={navRef}
-      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] border border-[#7DBBC3] left-1/2 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden rounded-md bg-[#0a0a0a] text-[#faf5ef] shadow-xl lg:w-[85%] xl:w-[75%]"
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] border border-[#7DBBC3]  left-1/2 z-50 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden rounded-md bg-[#0a0a0a] text-[#faf5ef] shadow-xl lg:w-[85%] xl:w-[75%]"
       onKeyDown={(event) => {
         if (event.key === "Escape" && isOpen) {
           setIsOpen(false);
@@ -40,9 +40,9 @@ export const Navbar = () => {
       }}
     >
       <div className="flex min-h-14 items-center justify-between gap-3 px-4 sm:px-6">
-        <span className="shrink-0 text-sm font-bold sm:text-base">
-          SupportOps AI
-        </span>
+        <p className="shrink-0 text-sm font-bold sm:text-base">
+          SupportOps <span className="text-[#7DBBC3]">AI</span>
+        </p>
         <nav
           aria-label="Main navigation"
           className="hidden items-center gap-4 lg:flex xl:gap-6"
