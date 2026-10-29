@@ -1,8 +1,9 @@
+import { Hero } from "@/components/sections/landing-page/hero";
+
 export default function Home() {
   return (
     <main>
-      <div className="h-svh"></div>
-      <div className="h-svh"></div>
+      <Hero />
     </main>
   );
 }
