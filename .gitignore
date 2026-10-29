@@ -1,0 +1,22 @@
+# Dependencies and generated output
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local configuration and secrets
+.env*
+!.env.example
+!.env.sample
+*.pem
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
