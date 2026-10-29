@@ -23,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased px-4 lg:px-12`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased container mx-auto px-4 xl:px-0`}
     >
       <body className="min-h-full flex flex-col">
         <SmoothScroll>{children}</SmoothScroll>
