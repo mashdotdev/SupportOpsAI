@@ -1,3 +1,4 @@
+import { CTABannerSection } from "@/components/sections/landing-page/cta-banner";
 import { EngineeringSection } from "@/components/sections/landing-page/engineering-section";
 import { Hero } from "@/components/sections/landing-page/hero";
 import { HowItWorks } from "@/components/sections/landing-page/how-it-works";
@@ -12,6 +13,7 @@ export default function Home() {
       <SupportOps />
       <HowItWorks />
       <EngineeringSection />
+      <CTABannerSection />
     </main>
   );
 }

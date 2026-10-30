@@ -71,7 +71,6 @@ export const EngineeringSection = () => {
             trigger: root.current,
             start: "top bottom",
             toggleActions: "play none none reverse",
-            markers: true,
           },
         },
       );
@@ -81,6 +80,7 @@ export const EngineeringSection = () => {
 
   return (
     <section
+      id="engineering"
       ref={root}
       className="relative min-h-fit py-16 text-[#0a0a0a] sm:py-20 lg:py-24"
     >

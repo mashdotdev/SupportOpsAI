@@ -5,13 +5,7 @@ import gsap from "gsap";
 import Link from "next/link";
 import { useId, useRef, useState } from "react";
 import { IoMenu } from "react-icons/io5";
-
-const NAV_ITEMS: NAV_ITEMS_TYPE = [
-  { title: "product", href: "#" },
-  { title: "how it works", href: "#" },
-  { title: "evaluations", href: "#" },
-  { title: "developers", href: "#" },
-];
+import { NAV_ITEMS } from "@/lib/navigation";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

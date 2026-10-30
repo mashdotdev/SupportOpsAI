@@ -3,7 +3,7 @@ import { SupportOpsDemo } from "./support-ops-demo";
 
 export const SupportOps = () => {
   return (
-    <section className="min-h-svh relative flex flex-col pb-16">
+    <section id="demo" className="min-h-svh relative flex flex-col pb-16">
       <div className="border-t  border-white/20 min-h-[15svh]">
         <div className="container mx-auto px-4 xl:px-0 flex flex-col items-center justify-center gap-4 text-center min-h-[15svh] py-12">
           <p className="text-my-blue">{"//"} INSIDE SUPPRTOPS</p>

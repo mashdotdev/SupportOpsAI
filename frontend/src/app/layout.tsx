@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/sections/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,8 +26,16 @@ const clashDisplay = localFont({
 
 const satoshi = localFont({
   src: [
-    { path: "./fonts/satoshi-variable.woff2", weight: "300 900", style: "normal" },
-    { path: "./fonts/satoshi-variable-italic.woff2", weight: "300 900", style: "italic" },
+    {
+      path: "./fonts/satoshi-variable.woff2",
+      weight: "300 900",
+      style: "normal",
+    },
+    {
+      path: "./fonts/satoshi-variable-italic.woff2",
+      weight: "300 900",
+      style: "italic",
+    },
   ],
   variable: "--font-satoshi-family",
   display: "swap",
@@ -46,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <SmoothScroll>{children}</SmoothScroll>
         <Navbar />
+        <Footer />
       </body>
     </html>
   );
