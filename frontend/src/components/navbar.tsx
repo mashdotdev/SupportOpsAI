@@ -27,7 +27,7 @@ export const Navbar = () => {
   return (
     <div
       ref={navRef}
-      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))]  rounded-md left-1/2 z-999 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden  bg-my-white backdrop-blur-3xl  text-my-black lg:w-[85%] xl:w-[75%]"
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))]  rounded-lg left-1/2 z-999 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden  bg-my-white backdrop-blur-3xl  text-my-black lg:w-[85%] xl:w-[75%]"
       onKeyDown={(event) => {
         if (event.key === "Escape" && isOpen) {
           setIsOpen(false);

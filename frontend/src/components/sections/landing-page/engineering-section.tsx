@@ -74,7 +74,7 @@ export const EngineeringSection = () => {
         { backgroundColor: "#0a0a0a" },
         {
           backgroundColor: "#f1f2ea",
-          duration: 1,
+          duration: 0.5,
         },
       )
         .fromTo(

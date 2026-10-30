@@ -159,16 +159,16 @@ export const ProblemSection = () => {
                 )}
               </div>
               <div className="min-w-0">
-                <p className="font-mono text-xs font-semibold uppercase leading-relaxed text-my-blue sm:text-sm">
+                <p className="text-xs font-semibold uppercase leading-relaxed text-my-blue sm:text-sm">
                   {problem.category}
                 </p>
-                <h3 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-my-white">
+                <h3 className="mt-3 text-2xl font-semibold leading-tight text-my-white">
                   {problem.title}
                 </h3>
-                <p className="mt-4 text-sm leading-relaxed text-[#929ca6] sm:text-base">
+                <p className="mt-4 text-sm font-satoshi leading-relaxed text-[#929ca6] sm:text-base lg:text-lg">
                   {problem.description}
                 </p>
-                <div className="mt-5 flex items-center rounded border border-my-white/[0.07] border-dashed px-4 py-4 font-mono text-sm leading-relaxed text-[#7b8794]">
+                <div className="mt-5 flex items-center rounded border border-my-white/[0.5] border-dashed px-4 py-4 font-mono text-sm leading-relaxed text-[#7b8794]">
                   <p>
                     <span className="font-semibold text-[#f06464]">
                       <span aria-hidden="true">× </span>

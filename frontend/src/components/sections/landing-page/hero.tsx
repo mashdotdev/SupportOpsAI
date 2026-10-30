@@ -89,7 +89,9 @@ export const Hero = () => {
           gsap.set(boxes, {
             clearProps: "transform,height,width,clipPath",
           });
-          gsap.set(textElements, { clearProps: "transform,opacity,visibility" });
+          gsap.set(textElements, {
+            clearProps: "transform,opacity,visibility",
+          });
           sessionStorage.setItem("first-visit", "true");
           setIsFirstVisit(false);
           setIsAnimating(false);
@@ -144,7 +146,10 @@ export const Hero = () => {
           >
             <div className="mx-auto flex w-full flex-col gap-8 lg:gap-12">
               <div className="w-full min-w-0">
-                <div data-hero-badge className="mb-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-black/10 px-3 py-1.5 font-mono text-[8px] uppercase tracking-wide sm:mb-8 sm:text-[9px] lg:mb-9">
+                <div
+                  data-hero-badge
+                  className="mb-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-black/10 px-3 py-1.5 font-mono text-[8px] uppercase tracking-wide sm:mb-8 sm:text-[9px] lg:mb-9"
+                >
                   <span className="size-1.5 shrink-0 rounded-full bg-my-blue" />
                   <span className="text-my-blue text-sm">
                     AI support infrastructure
@@ -160,7 +165,8 @@ export const Hero = () => {
                   id="hero-title"
                   className="text-[clamp(2rem,8vw,3.5rem)] leading-[1.02] font-medium tracking-[-0.045em] text-my-white lg:text-[clamp(2.5rem,5.6vw,7rem)]"
                 >
-                  Answers grounded <br /> in <span className="text-my-blue">evidence</span>.
+                  Answers grounded <br /> in{" "}
+                  <span className="text-my-blue">evidence</span>.
                 </h1>
                 <h2 className="mt-1 whitespace-nowrap text-[clamp(1rem,6vw,7rem)] leading-[1.02] font-medium tracking-[-0.045em]">
                   Agents built for action.
@@ -228,7 +234,7 @@ export const Hero = () => {
                   ref={(el) => {
                     boxesRef.current[index] = el;
                   }}
-                  className="absolute inset-0 overflow-hidden rounded-md"
+                  className="absolute inset-0 overflow-hidden rounded-lg"
                 >
                   <Image
                     ref={(el) => {
