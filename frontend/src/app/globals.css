@@ -19,8 +19,8 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --background: #fafaf8;
-        --foreground: #3b2d28;
+        --background: #0a0a0a;
+        --foreground: #fafaf8;
     }
 }
 
@@ -51,8 +51,8 @@ html {
     content: "";
     position: absolute;
     inset: auto 0 0;
-    height: 70%;
-    background: linear-gradient(to bottom, transparent, #fafaf8);
+    height: 40%;
+    background: linear-gradient(to bottom, transparent, #0a0a0a);
     pointer-events: none;
     z-index: 1;
 }

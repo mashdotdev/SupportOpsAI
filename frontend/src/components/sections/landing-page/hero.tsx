@@ -152,13 +152,13 @@ export const Hero = () => {
                   <span aria-hidden="true" className="text-[#FAF5EF]">
                     ·
                   </span>
-                  <span className="text-my-black text-sm">
+                  <span className="text-my-white text-sm">
                     Built for reliability
                   </span>
                 </div>
                 <h1
                   id="hero-title"
-                  className="text-[clamp(2rem,8vw,3.5rem)] leading-[1.02] font-medium tracking-[-0.045em] text-black lg:text-[clamp(2.5rem,5.6vw,7rem)]"
+                  className="text-[clamp(2rem,8vw,3.5rem)] leading-[1.02] font-medium tracking-[-0.045em] text-my-white lg:text-[clamp(2.5rem,5.6vw,7rem)]"
                 >
                   Answers grounded <br /> in <span className="text-my-blue">evidence</span>.
                 </h1>
@@ -167,7 +167,7 @@ export const Hero = () => {
                 </h2>
               </div>
               <div className="flex w-full min-w-0 flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pb-0.5">
-                <p className="w-full min-w-0 text-sm leading-relaxed text-black/75 sm:text-base lg:max-w-lg lg:flex-1 font-satoshi">
+                <p className="w-full min-w-0 text-sm leading-relaxed text-my-white/75 sm:text-base lg:max-w-lg lg:flex-1 font-satoshi">
                   Give your AI support agent the knowledge, controlled tools,
                   and continuous evaluation loop it needs to resolve high-stakes
                   customer questions with certainty.
