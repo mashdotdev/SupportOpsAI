@@ -32,7 +32,6 @@ export const Footer = () => {
         scrollTrigger: {
           trigger: footerRoot.current,
           start: "top center",
-          markers: true,
         },
       });
     },
@@ -44,7 +43,7 @@ export const Footer = () => {
       ref={footerRoot}
       className="bg-[#0a0a0a] text-my-white py-16 relative overflow-hidden [container-type:inline-size]"
     >
-      <div className="container mx-auto flex w-full flex-col px-4 pb-16 sm:pb-24 xl:px-0">
+      <div className="container mx-auto flex w-full flex-col px-4 pb-16 sm:pb-24 xl:px-0 overflow-hidden">
         <div className="grid gap-12 border-t border-my-white/15 pt-10 md:grid-cols-2 md:gap-16">
           <div className="max-w-md">
             <Link

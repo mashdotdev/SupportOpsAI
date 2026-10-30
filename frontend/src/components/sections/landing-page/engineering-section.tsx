@@ -61,21 +61,31 @@ export const EngineeringSection = () => {
 
   useGSAP(
     () => {
-      gsap.fromTo(
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: root.current,
+          start: "top center",
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      tl.fromTo(
         document.body,
         { backgroundColor: "#0a0a0a" },
         {
           backgroundColor: "#f1f2ea",
           duration: 1,
-          scrollTrigger: {
-            trigger: root.current,
-            start: "top bottom",
-            toggleActions: "play none none reverse",
-          },
         },
-      );
+      )
+        .fromTo(
+          "[data-change-color]",
+          { color: "#fafaf8" },
+          { color: "#0a0a0a" },
+          "<",
+        )
+        .fromTo("[data-change-opacity]", { opacity: 0 }, { opacity: 1 }, "<");
     },
-    { scope: root, revertOnUpdate: true },
+    { revertOnUpdate: true },
   );
 
   return (
@@ -85,9 +95,9 @@ export const EngineeringSection = () => {
       className="relative min-h-fit py-16 text-[#0a0a0a] sm:py-20 lg:py-24"
     >
       <div className="container mx-auto grid gap-12 px-4 lg:grid-cols-2 lg:gap-16 xl:gap-24 xl:px-0">
-        <div className="min-w-0">
-          <p className="mb-5 font-mono text-[10px] uppercase tracking-[0.16em] text-my-blue">
-            Engineering first
+        <div data-change-opacity className="min-w-0">
+          <p className="mb-5 uppercase text-my-blue">
+            {"//"} Engineering first
           </p>
           <h2 className="max-w-2xl text-[clamp(2rem,3.5vw,3.5rem)] font-medium leading-[1.04] tracking-[-0.045em]">
             Designed to be inspected.
@@ -124,7 +134,7 @@ export const EngineeringSection = () => {
             </CodeBlock>
           </div>
         </div>
-        <ol className="min-w-0 border-t border-black/15">
+        <ol data-change-opacity className="min-w-0 border-t border-black/15">
           {CAPABILITIES.map((capability, index) => (
             <li
               key={capability.title}
