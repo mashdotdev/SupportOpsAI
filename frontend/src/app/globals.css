@@ -10,12 +10,17 @@
     --color-foreground: var(--foreground);
     --font-sans: var(--font-geist-sans);
     --font-mono: var(--font-geist-mono);
+    --font-clash: var(--font-clash-display);
+    --font-satoshi: var(--font-satoshi-family);
+    --color-my-blue: #0593c6;
+    --color-my-black: #3b2d28;
+    --color-my-white: #fafaf8;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --background: #0a0a0a;
-        --foreground: #fafafa;
+        --background: #fafaf8;
+        --foreground: #3b2d28;
     }
 }
 
@@ -26,7 +31,7 @@ body {
 }
 
 ::-webkit-scrollbar {
-    width: 2px;
+    width: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -34,17 +39,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #7dbbc3;
-    border-radius: 60px;
+    background: #0593c6;
+    border-radius: 100px;
 }
 
 html {
     scroll-behavior: smooth;
-}
-
-.hero-section {
-    position: relative;
-    isolation: isolate;
 }
 
 .hero-section::after {
@@ -52,7 +52,7 @@ html {
     position: absolute;
     inset: auto 0 0;
     height: 70%;
-    background: linear-gradient(to bottom, transparent, #0a0a0a);
+    background: linear-gradient(to bottom, transparent, #fafaf8);
     pointer-events: none;
     z-index: 1;
 }

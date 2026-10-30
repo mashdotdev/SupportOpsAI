@@ -57,20 +57,18 @@ export const ProblemSection = () => {
           const cards = Array.from(
             container.querySelectorAll<HTMLElement>("[data-problem-card]"),
           );
-          const middle = cards[1];
-          const outer = [cards[0], cards[2]];
-
           gsap.fromTo(
-            outer,
+            cards,
             {
-              x: (_, card: HTMLElement) => middle.offsetLeft - card.offsetLeft,
-              scale: 0.94,
+              y: 40,
+              autoAlpha: 0,
             },
             {
-              x: 0,
-              scale: 1,
-              duration: 1.1,
-              ease: "power3.inOut",
+              y: 0,
+              autoAlpha: 1,
+              duration: 0.8,
+              stagger: 0.15,
+              ease: "power3.out",
               scrollTrigger: {
                 trigger: container,
                 start: "top center",
@@ -88,13 +86,13 @@ export const ProblemSection = () => {
   );
 
   return (
-    <section className="min-h-[50svh] overflow-hidden relative py-16 flex flex-col">
+    <section className="min-h-[50svh] overflow-hidden relative py-16 flex flex-col container mx-auto px-4 xl:px-0">
       <div className="">
-        <p className="text-[#7DBBC3] text-center">{"//"} 01 THE PROBLEM</p>
-        <h2 className="text-center text-[clamp(2rem,8vw,3.5rem)] lg:text-[clamp(2.25rem,5.6vw,7rem)] font-semibold leading-none tracking-tight">
+        <p className="text-my-blue">{"//"} 01 THE PROBLEM</p>
+        {/*<h2 className="text-[clamp(2rem,8vw,3.5rem)] lg:text-[clamp(2.25rem,5.6vw,7rem)] font-semibold leading-none tracking-tight">
           Fluent answers aren&apos;t enough.
-        </h2>
-        <p className="text-center max-w-5xl mx-auto sm:text-base lg:text-xl mt-4">
+        </h2>*/}
+        <p className="max-w-2xl sm:text-base lg:text-xl 2xl:text-2xl mt-4 font-satoshi font-semibold">
           Standard LLMs sound authoritative even when they invent corporate
           policy, misuse APIs, or hallucinate answers that cost customers trust
           and money.
@@ -104,7 +102,7 @@ export const ProblemSection = () => {
       {/*bottom*/}
       <div
         ref={cardsRef}
-        className="relative isolate mt-12 grid w-full grid-cols-1 items-stretch gap-5 lg:h-[50svh] lg:grid-cols-3 lg:content-stretch lg:gap-7"
+        className="relative isolate mt-12 w-full border-b border-my-blue/20"
       >
         {PROBLEMS.map((problem, index) => {
           const Icon = problem.icon;
@@ -113,28 +111,75 @@ export const ProblemSection = () => {
             <article
               key={problem.title}
               data-problem-card
-              className={`relative flex min-w-0 flex-col rounded-2xl border border-[#7DBBC3]/50 bg-[#0a0a0a] p-6 sm:p-8 ${index === 1 ? "z-10" : "z-0"}`}
+              className="relative grid min-w-0 grid-cols-1 gap-8 border-t border-my-blue/20 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[0.35fr_1.2fr_1.3fr] lg:items-center lg:gap-12 lg:py-12"
             >
-              <div className="mb-7 flex size-12 items-center justify-center rounded-xl border border-white/[0.06] bg-[#181d21] text-[#FAF5EF]/85">
-                <Icon aria-hidden="true" className="size-6" />
+              <div className="flex items-center gap-3 self-start font-mono text-xs text-[#929ca6]">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <Icon aria-hidden="true" className="size-4" />
               </div>
-              <p className="font-mono text-xs font-semibold uppercase leading-relaxed text-[#7DBBC3] sm:text-sm">
-                {problem.category}
-              </p>
-              <h3 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-[#FAF5EF]">
-                {problem.title}
-              </h3>
-              <p className="mt-4 mb-7 text-sm leading-7 text-[#929ca6] sm:text-base lg:text-lg">
-                {problem.description}
-              </p>
-              <div className="mt-auto flex min-h-24 items-center rounded border border-white/[0.07] bg-[#080b0c] px-4 py-5 font-mono text-sm leading-relaxed text-[#7b8794] sm:text-base">
-                <p>
-                  <span className="font-semibold text-[#f06464]">
-                    <span aria-hidden="true">× </span>
-                    {problem.failure}:{" "}
-                  </span>
-                  {problem.example}
+              <div
+                aria-hidden="true"
+                className="flex min-h-24 min-w-0 items-center justify-center font-mono text-[9px] uppercase text-[#929ca6] sm:min-h-32"
+              >
+                {index === 0 ? (
+                  <div className="flex w-full max-w-sm items-center">
+                    <span>Question</span>
+                    <span className="h-px flex-1 bg-my-black/25" />
+                    <span className="flex size-11 shrink-0 items-center justify-center border border-my-black/25 text-sm text-my-blue">
+                      ?
+                    </span>
+                    <span className="flex-1 border-t border-dashed border-my-black/25" />
+                    <span>Answer</span>
+                  </div>
+                ) : index === 1 ? (
+                  <div className="flex w-full max-w-sm items-center gap-4">
+                    <span>Model</span>
+                    <div className="flex h-16 w-20 items-center justify-center gap-2 border border-my-black/20">
+                      <span className="h-7 w-1 bg-my-black/30" />
+                      <span className="h-5 w-1 bg-my-blue" />
+                      <span className="h-7 w-1 bg-my-black/30" />
+                    </div>
+                    <span className="h-px w-5 bg-my-black/25" />
+                    <span className="flex size-12 items-center justify-center border border-my-black/25 leading-tight text-my-blue">
+                      Black
+                      <br />
+                      box
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex h-20 w-full max-w-sm items-end gap-1.5 border-b border-my-black/25 pb-4">
+                    {[10, 20, 14, 28, 17, 24, 10, 21, 14, 29, 18, 22].map(
+                      (height, barIndex) => (
+                        <span
+                          key={barIndex}
+                          style={{ height }}
+                          className={`min-w-0 flex-1 ${barIndex === 3 || barIndex === 7 ? "bg-my-blue" : "bg-my-black/25"}`}
+                        />
+                      ),
+                    )}
+                    <span className="self-center text-my-blue">?</span>
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="font-mono text-xs font-semibold uppercase leading-relaxed text-my-blue sm:text-sm">
+                  {problem.category}
                 </p>
+                <h3 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-my-black">
+                  {problem.title}
+                </h3>
+                <p className="mt-4 text-sm leading-relaxed text-[#929ca6] sm:text-base">
+                  {problem.description}
+                </p>
+                <div className="mt-5 flex items-center rounded border border-my-black/[0.07] px-4 py-4 font-mono text-sm leading-relaxed text-[#7b8794]">
+                  <p>
+                    <span className="font-semibold text-[#f06464]">
+                      <span aria-hidden="true">× </span>
+                      {problem.failure}:{" "}
+                    </span>
+                    {problem.example}
+                  </p>
+                </div>
               </div>
             </article>
           );

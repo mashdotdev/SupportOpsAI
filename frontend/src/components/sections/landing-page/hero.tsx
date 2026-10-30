@@ -22,6 +22,7 @@ export const Hero = () => {
   const [isFirstVisit, setIsFirstVisit] = useState(true);
 
   const root = useRef<HTMLDivElement | null>(null);
+  const topRef = useRef<HTMLDivElement | null>(null);
   const boxesRef = useRef<(HTMLDivElement | null)[]>([]);
   const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
 
@@ -56,6 +57,13 @@ export const Hero = () => {
       }
 
       const stage = section.getBoundingClientRect();
+      const textElements = gsap.utils.toArray<HTMLElement>(
+        "[data-hero-badge], h1, h2, p, a, li",
+        topRef.current!,
+      );
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
       const boxesRects = boxes.map((box) => box!.getBoundingClientRect());
 
       const startingWidth = Math.min(stage.width * 0.2, 300);
@@ -71,12 +79,17 @@ export const Hero = () => {
         clipPath: "inset(100% 0% 0% 0%)",
       });
 
+      if (!reduceMotion) {
+        gsap.set(textElements, { y: 40, autoAlpha: 0 });
+      }
+
       const tl = gsap.timeline({
         delay: 0.3,
         onComplete: () => {
           gsap.set(boxes, {
             clearProps: "transform,height,width,clipPath",
           });
+          gsap.set(textElements, { clearProps: "transform,opacity,visibility" });
           sessionStorage.setItem("first-visit", "true");
           setIsFirstVisit(false);
           setIsAnimating(false);
@@ -101,117 +114,136 @@ export const Hero = () => {
         },
         "+=0.5",
       );
+
+      if (!reduceMotion) {
+        tl.to(
+          textElements,
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out",
+          },
+          "<+=0.3",
+        );
+      }
     },
     { scope: root, revertOnUpdate: true, dependencies: [isFirstVisit] },
   );
 
   return (
     <section ref={root} className="relative min-h-svh hero-section">
-      <div className="flex min-h-svh flex-col">
-        {/*top*/}
-        <div
-          aria-labelledby="hero-title"
-          className="relative flex flex-1 items-center pt-6 pb-10 sm:pt-8 sm:pb-16 lg:pt-12"
-        >
-          <div className="mx-auto flex w-full flex-col gap-8 lg:gap-12">
-            <div className="w-full min-w-0">
-              <div className="mb-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-black/10 px-3 py-1.5 font-mono text-[8px] uppercase tracking-wide sm:mb-8 sm:text-[9px] lg:mb-9">
-                <span className="size-1.5 shrink-0 rounded-full bg-[#7DBBC3]" />
-                <span className="text-[#7DBBC3]">
-                  AI support infrastructure
-                </span>
-                <span aria-hidden="true" className="text-[#FAF5EF]">
-                  ·
-                </span>
-                <span className="text-[#FAF5EF]">Built for reliability</span>
-              </div>
-              <h1
-                id="hero-title"
-                className="text-[clamp(2rem,8vw,3.5rem)] leading-[1.02] font-bold tracking-[-0.045em] text-[#FAF5EF] lg:text-[clamp(2.5rem,5.6vw,7rem)]"
-              >
-                Answers grounded in evidence.
-              </h1>
-              <h2 className="mt-1 whitespace-nowrap text-[clamp(1rem,6vw,7rem)] leading-[1.02] font-semibold tracking-[-0.045em] text-[#7DBBC3]">
-                Agents built for action.
-              </h2>
-            </div>
-            <div className="flex w-full min-w-0 flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pb-0.5">
-              <p className="w-full min-w-0 text-sm leading-relaxed text-[#FAF5EF]/75 sm:text-base lg:max-w-lg lg:flex-1">
-                Give your AI support agent the knowledge, controlled tools, and
-                continuous evaluation loop it needs to resolve high-stakes
-                customer questions with certainty.
-              </p>
-              <div className="flex w-full min-w-0 flex-col gap-6 lg:w-auto lg:shrink-0">
-                <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-                  <Link
-                    href="#demo"
-                    className="inline-flex min-h-10 items-center justify-center gap-3 rounded-lg bg-[#7DBBC3] px-4 py-2.5 text-xs font-semibold text-[#0a0a0a] transition-colors hover:bg-[#96c9cf] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
-                  >
-                    Explore the live demo
-                    <IoArrowUpOutline
-                      aria-hidden="true"
-                      className="size-3.5 rotate-45"
-                    />
-                  </Link>
-                  <Link
-                    href="#how-it-works"
-                    className="inline-flex min-h-10 items-center justify-center rounded-lg border border-black/15 px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
-                  >
-                    See how it works
-                  </Link>
+      <div className="container mx-auto px-4 xl:px-0">
+        <div className="flex min-h-svh flex-col">
+          {/*top*/}
+          <div
+            ref={topRef}
+            aria-labelledby="hero-title"
+            className="relative flex flex-1 items-center pt-6 pb-10 sm:pt-8 sm:pb-16 lg:pt-12"
+          >
+            <div className="mx-auto flex w-full flex-col gap-8 lg:gap-12">
+              <div className="w-full min-w-0">
+                <div data-hero-badge className="mb-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-black/10 px-3 py-1.5 font-mono text-[8px] uppercase tracking-wide sm:mb-8 sm:text-[9px] lg:mb-9">
+                  <span className="size-1.5 shrink-0 rounded-full bg-my-blue" />
+                  <span className="text-my-blue text-sm">
+                    AI support infrastructure
+                  </span>
+                  <span aria-hidden="true" className="text-[#FAF5EF]">
+                    ·
+                  </span>
+                  <span className="text-my-black text-sm">
+                    Built for reliability
+                  </span>
                 </div>
-                <ul className="flex w-full flex-wrap items-start gap-3 font-mono text-[10px] leading-tight text-[#626d7a] sm:gap-4">
-                  <li className="flex-1">
-                    Grounded
-                    <br />
-                    retrieval
-                  </li>
-                  <li className="flex flex-1 gap-3 before:text-black/20 before:content-['/'] sm:gap-4">
-                    <span>
-                      Controlled tool
+                <h1
+                  id="hero-title"
+                  className="text-[clamp(2rem,8vw,3.5rem)] leading-[1.02] font-medium tracking-[-0.045em] text-black lg:text-[clamp(2.5rem,5.6vw,7rem)]"
+                >
+                  Answers grounded <br /> in <span className="text-my-blue">evidence</span>.
+                </h1>
+                <h2 className="mt-1 whitespace-nowrap text-[clamp(1rem,6vw,7rem)] leading-[1.02] font-medium tracking-[-0.045em]">
+                  Agents built for action.
+                </h2>
+              </div>
+              <div className="flex w-full min-w-0 flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pb-0.5">
+                <p className="w-full min-w-0 text-sm leading-relaxed text-black/75 sm:text-base lg:max-w-lg lg:flex-1 font-satoshi">
+                  Give your AI support agent the knowledge, controlled tools,
+                  and continuous evaluation loop it needs to resolve high-stakes
+                  customer questions with certainty.
+                </p>
+                <div className="flex w-full min-w-0 flex-col gap-6 lg:w-auto lg:shrink-0">
+                  <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:flex-wrap">
+                    <Link
+                      href="#demo"
+                      className="inline-flex min-h-10 items-center justify-center gap-3 font-satoshi rounded-lg bg-my-blue px-4 py-2.5 text-xs font-semibold text-my-white transition-colors hover:bg-[#CCFF00]/75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
+                    >
+                      Explore the live demo
+                      <IoArrowUpOutline
+                        aria-hidden="true"
+                        className="size-3.5 rotate-45"
+                      />
+                    </Link>
+                    <Link
+                      href="#how-it-works"
+                      className="inline-flex min-h-10 items-center justify-center font-satoshi rounded-lg border border-black/15 px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
+                    >
+                      See how it works
+                    </Link>
+                  </div>
+                  <ul className="flex w-full flex-wrap items-start gap-3 font-mono text-[10px] leading-tight text-[#626d7a] sm:gap-4">
+                    <li className="flex-1">
+                      Grounded
                       <br />
-                      use
-                    </span>
-                  </li>
-                  <li className="flex flex-1 gap-3 before:text-black/20 before:content-['/'] sm:gap-4">
-                    <span>
-                      Measurable
-                      <br />
-                      quality
-                    </span>
-                  </li>
-                </ul>
+                      retrieval
+                    </li>
+                    <li className="flex flex-1 gap-3 before:text-black/20 before:content-['/'] sm:gap-4">
+                      <span>
+                        Controlled tool
+                        <br />
+                        use
+                      </span>
+                    </li>
+                    <li className="flex flex-1 gap-3 before:text-black/20 before:content-['/'] sm:gap-4">
+                      <span>
+                        Measurable
+                        <br />
+                        quality
+                      </span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/*bottom*/}
-        <div className="flex flex-col lg:flex-2 lg:flex-row lg:justify-between gap-[1svh]">
-          {IMAGES.map((src, index) => (
-            <div
-              key={index}
-              className="relative min-w-0 w-full aspect-3/4 flex-none lg:flex-1 lg:max-w-[min(28vw,38svh)]"
-            >
+          {/*bottom*/}
+          <div className="flex flex-col lg:flex-2 lg:flex-row lg:justify-between gap-[1svh]">
+            {IMAGES.map((src, index) => (
               <div
-                ref={(el) => {
-                  boxesRef.current[index] = el;
-                }}
-                className="absolute inset-0 overflow-hidden rounded-md"
+                key={index}
+                className="relative min-w-0 w-full aspect-3/4 flex-none lg:flex-1 lg:max-w-[min(28vw,38svh)]"
               >
-                <Image
+                <div
                   ref={(el) => {
-                    imagesRef.current[index] = el;
+                    boxesRef.current[index] = el;
                   }}
-                  priority
-                  src={src}
-                  alt=""
-                  draggable={false}
-                  className="size-full block object-cover scale-115"
-                />
+                  className="absolute inset-0 overflow-hidden rounded-md"
+                >
+                  <Image
+                    ref={(el) => {
+                      imagesRef.current[index] = el;
+                    }}
+                    priority
+                    src={src}
+                    alt=""
+                    draggable={false}
+                    className="size-full block object-cover scale-115"
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>

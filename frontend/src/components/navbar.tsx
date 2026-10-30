@@ -33,7 +33,7 @@ export const Navbar = () => {
   return (
     <div
       ref={navRef}
-      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] border border-[#7DBBC3]  left-1/2 z-999 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden rounded-md bg-[#0a0a0a] text-[#faf5ef] shadow-xl lg:w-[85%] xl:w-[75%]"
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))]  left-1/2 z-999 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden  bg-black/50 backdrop-blur-3xl  text-[#faf5ef] shadow-2xl shadow-[#3b2d28] lg:w-[85%] xl:w-[75%]"
       onKeyDown={(event) => {
         if (event.key === "Escape" && isOpen) {
           setIsOpen(false);
@@ -68,7 +68,7 @@ export const Navbar = () => {
           aria-expanded={isOpen}
           aria-controls={menuId}
           onClick={() => setIsOpen((open) => !open)}
-          className="flex size-11 shrink-0 cursor-pointer text-[#7DBBC3] items-center justify-center rounded-full transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#faf5ef]"
+          className="flex size-11 shrink-0 cursor-pointer text-[#CCFF00] items-center justify-center rounded-full transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#faf5ef]"
         >
           <IoMenu aria-hidden="true" className="size-6" />
         </button>
@@ -101,7 +101,7 @@ export const Navbar = () => {
                 <button
                   key={label}
                   type="button"
-                  className="min-h-11 flex-1 cursor-pointer rounded-full border border-white/25 px-5 py-2 text-sm font-medium transition-colors hover:bg-[#7DBBC3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#faf5ef]"
+                  className="min-h-11 flex-1 cursor-pointer rounded-full border border-white/25 px-5 py-2 text-sm font-medium transition-colors hover:bg-[#CCFF00] hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#faf5ef]"
                 >
                   {label}
                 </button>
