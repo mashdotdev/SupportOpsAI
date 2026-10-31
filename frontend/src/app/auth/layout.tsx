@@ -21,23 +21,26 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={satoshi.variable} suppressHydrationWarning>
       <body className="bg-my-white text-my-black">
-        <div className="flex min-h-svh p-4">
-          <div className="min-w-0 flex-1">{children}</div>
-          <div className="flex-1 sticky top-4 h-[calc(100svh-2rem)] min-h-144 min-w-0 rounded-sm overflow-hidden hidden lg:block">
+        <div className="flex h-svh">
+          <div className="flex-1">{children}</div>
+          <div className="flex-2 relative  overflow-hidden hidden lg:block">
             <Image
-              src={"/images/chicago.jpg"}
+              src={"/images/auth-image-2.png"}
               alt=""
               fill
               sizes="50vw"
-              className="object-cover"
+              className="object-cover object-left brightness-75"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-            <div className="relative flex h-full flex-col justify-end gap-10 p-6 text-white xl:gap-16 xl:p-12">
+            <div className="relative flex h-full flex-col justify-end gap-10 p-6 text-white xl:gap-16 xl:p-12 container mx-auto">
               <div className="flex flex-wrap items-center justify-between gap-5">
                 <h2 className="text-[clamp(2rem,3vw,3.5rem)] font-medium leading-tight tracking-tight">
                   Get Started
                   <br />
-                  with Us
+                  with SupportOps{" "}
+                  <span className=" font-bold">
+                    AI
+                  </span>
                 </h2>
                 <p className="max-w-52 text-sm leading-relaxed text-white/65 xl:text-base">
                   Complete these easy steps to register your account.

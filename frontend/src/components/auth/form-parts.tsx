@@ -28,7 +28,7 @@ export function FormShell({
         <header className="flex flex-col gap-2.5 text-center">
           <h1
             id="auth-heading"
-            className="text-2xl leading-8 font-medium tracking-tight text-my-black lg:text-5xl lg:leading-none"
+            className="text-2xl leading-8 font-medium tracking-tight text-my-black lg:text-6xl lg:leading-none"
           >
             {title}
           </h1>
