@@ -1,2 +1,0 @@
-/* Keep the auth UI defaults below the app's responsive Tailwind utilities. */
-@import "@neondatabase/auth-ui/css" layer(components);
