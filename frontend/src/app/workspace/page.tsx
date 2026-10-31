@@ -12,5 +12,9 @@ async function SignedInWorkspace() {
 }
 
 export default function WorkspacePage() {
-  return <Suspense fallback={<p className="p-24">Loading workspace…</p>}><SignedInWorkspace /></Suspense>;
+  return (
+    <Suspense fallback={<p className="p-24">Loading workspace…</p>}>
+      <SignedInWorkspace />
+    </Suspense>
+  );
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
-import "./globals.css";
+import "../globals.css";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 const clashDisplay = localFont({
-  src: "./fonts/clash-display-variable.woff2",
+  src: "../fonts/clash-display-variable.woff2",
   variable: "--font-clash-display",
   weight: "200 700",
   style: "normal",
@@ -27,12 +27,12 @@ const clashDisplay = localFont({
 const satoshi = localFont({
   src: [
     {
-      path: "./fonts/satoshi-variable.woff2",
+      path: "../fonts/satoshi-variable.woff2",
       weight: "300 900",
       style: "normal",
     },
     {
-      path: "./fonts/satoshi-variable-italic.woff2",
+      path: "../fonts/satoshi-variable-italic.woff2",
       weight: "300 900",
       style: "italic",
     },
