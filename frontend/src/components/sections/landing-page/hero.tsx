@@ -57,7 +57,9 @@ export const Hero = () => {
         return;
       }
 
-      const stage = section.getBoundingClientRect();
+      const viewport = window.visualViewport;
+      const viewportWidth = viewport?.width ?? window.innerWidth;
+      const viewportHeight = viewport?.height ?? window.innerHeight;
       const textElements = gsap.utils.toArray<HTMLElement>(
         "[data-hero-badge], h1, h2, p, a, li",
         topRef.current!,
@@ -67,10 +69,13 @@ export const Hero = () => {
       ).matches;
       const boxesRects = boxes.map((box) => box!.getBoundingClientRect());
 
-      const startingWidth = Math.min(stage.width * 0.2, 300);
+      const startingWidth = Math.min(viewportWidth * 0.2, 300);
       const startingHeight = startingWidth * (4 / 3);
-      const centerY = stage.top + (stage.height - startingHeight) / 2;
-      const centerX = stage.left + (stage.width - startingWidth) / 2;
+      // Match getBoundingClientRect's viewport coordinates, not the hero's height.
+      const centerY =
+        (viewport?.offsetTop ?? 0) + (viewportHeight - startingHeight) / 2;
+      const centerX =
+        (viewport?.offsetLeft ?? 0) + (viewportWidth - startingWidth) / 2;
 
       gsap.set(boxes, {
         height: startingHeight,
