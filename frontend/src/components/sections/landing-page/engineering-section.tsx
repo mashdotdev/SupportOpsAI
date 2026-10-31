@@ -71,16 +71,39 @@ export const EngineeringSection = () => {
 
       tl.fromTo(
         document.body,
-        { backgroundColor: "#0a0a0a" },
+        { backgroundColor: "#f1f2ea" },
         {
-          backgroundColor: "#f1f2ea",
+          backgroundColor: "#0a0a0a",
           duration: 0.5,
         },
       )
         .fromTo(
+          "[data-change-card-theme]",
+          {
+            "--card-surface": "#ffffff",
+            "--card-secondary": "#f7f7f5",
+            "--card-inset": "#eeeeeb",
+            "--card-raised": "#e5e5e2",
+            "--card-metric": "#f7f7f5",
+            "--card-ink": "#171717",
+            "--card-border": "rgba(0,0,0,0.12)",
+          },
+          {
+            "--card-surface": "#141414",
+            "--card-secondary": "#181818",
+            "--card-inset": "#0a0a0a",
+            "--card-raised": "#202020",
+            "--card-metric": "#161616",
+            "--card-ink": "#fafaf8",
+            "--card-border": "rgba(250,250,248,0.2)",
+            duration: 0.5,
+          },
+          "<",
+        )
+        .fromTo(
           "[data-change-color]",
-          { color: "#fafaf8" },
           { color: "#0a0a0a" },
+          { color: "#fafaf8" },
           "<",
         )
         .fromTo("[data-change-opacity]", { opacity: 0 }, { opacity: 1 }, "<");
@@ -92,7 +115,7 @@ export const EngineeringSection = () => {
     <section
       id="engineering"
       ref={root}
-      className="relative min-h-fit py-16 text-[#0a0a0a] sm:py-20 lg:py-24"
+      className="relative min-h-fit py-16 text-my-white sm:py-20 lg:py-24"
     >
       <div className="container mx-auto grid gap-12 px-4 lg:grid-cols-2 lg:gap-16 xl:gap-24 xl:px-0">
         <div data-change-opacity className="min-w-0">
@@ -104,16 +127,16 @@ export const EngineeringSection = () => {
             <br />
             Built to be tested.
           </h2>
-          <p className="mt-4 max-w-sm font-satoshi text-sm leading-relaxed text-black/55">
-            SupportOps treats reliability as an engineering system—not a prompt
+          <p className="mt-4 max-w-sm font-satoshi text-base leading-relaxed text-white/60">
+            SupportOps treats reliability as an engineering system, not a prompt
             that happens to work in a demo.
           </p>
-          <div className="dark mt-9 max-w-md rounded-lg bg-background shadow-xl">
-            <CodeBlock size="default">
-              <CodeBlockHeader className="border-b border-border pb-3">
-                <CodeBlockTitle>run_trace.json</CodeBlockTitle>
+          <div className="mt-9 max-w-md rounded-lg shadow-xl">
+            <CodeBlock size="default" className="border-my-white/15 bg-[#0a0a0a] text-my-white dark:bg-[#0a0a0a]">
+              <CodeBlockHeader className="border-b border-my-white/15 pb-3 text-my-white">
+                <CodeBlockTitle className="text-my-white">run_trace.json</CodeBlockTitle>
                 <CodeBlockActions>
-                  <CodeBlockCopyButton value={RUN_TRACE} />
+                  <CodeBlockCopyButton value={RUN_TRACE} className="text-my-white hover:bg-my-white/10 hover:text-my-white" />
                 </CodeBlockActions>
               </CodeBlockHeader>
               <CodeBlockContent
@@ -122,7 +145,7 @@ export const EngineeringSection = () => {
               >
                 {RUN_TRACE}
               </CodeBlockContent>
-              <CodeBlockFooter className="border-t border-border pt-3">
+              <CodeBlockFooter className="border-t border-my-white/15 pt-3 text-my-white">
                 <span
                   aria-hidden="true"
                   className="size-1.5 rounded-full bg-my-blue"
@@ -134,26 +157,26 @@ export const EngineeringSection = () => {
             </CodeBlock>
           </div>
         </div>
-        <ol data-change-opacity className="min-w-0 border-t border-black/15">
+        <ol data-change-opacity className="min-w-0 border-t border-my-white/50">
           {CAPABILITIES.map((capability, index) => (
             <li
               key={capability.title}
-              className="grid grid-cols-[20px_1fr_auto] items-start gap-4 border-b border-black/15 py-7 sm:gap-6 sm:py-8"
+              className="grid grid-cols-[20px_1fr_auto] items-start gap-4 border-b border-my-white/50 py-7 sm:gap-6 sm:py-8"
             >
-              <span className="pt-1 font-mono text-[9px] text-black/45">
+              <span className="pt-1 text-sm  text-my-white/60">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <div>
-                <h3 className="font-satoshi text-base font-semibold tracking-tight">
+                <h3 className="font-satoshi text-lg font-semibold tracking-tight">
                   {capability.title}
                 </h3>
-                <p className="mt-2 font-satoshi text-xs leading-relaxed text-black/55 sm:text-sm">
+                <p className="mt-2 font-satoshi text-xs leading-relaxed text-my-white/55 sm:text-base">
                   {capability.description}
                 </p>
               </div>
               <ArrowUpRight
                 aria-hidden="true"
-                className="size-3 self-center text-black/35"
+                className="size-6 self-center text-my-white/50"
               />
             </li>
           ))}

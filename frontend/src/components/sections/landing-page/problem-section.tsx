@@ -108,33 +108,33 @@ export const ProblemSection = () => {
             <article
               key={problem.title}
               data-problem-card
-              className="relative grid min-w-0 grid-cols-1 gap-8 border-t border-my-blue/20 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[0.35fr_1.2fr_1.3fr] lg:items-center lg:gap-12 lg:py-12"
+              className="relative grid min-w-0 grid-cols-1 gap-8 border-t border-my-blue/70 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[0.35fr_1.2fr_1.3fr] lg:items-center lg:gap-12 lg:py-12"
             >
-              <div className="flex items-center gap-3 self-start font-mono text-xs text-[#929ca6]">
+              <div className="flex items-center gap-3 self-start text-lg font-medium text-my-black">
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <Icon aria-hidden="true" className="size-4" />
               </div>
               <div
                 aria-hidden="true"
-                className="flex min-h-24 min-w-0 items-center justify-center font-mono text-[9px] uppercase text-[#929ca6] sm:min-h-32"
+                className="flex min-h-24 min-w-0 items-center justify-center  text-[9px] uppercase text-my-black sm:min-h-32"
               >
                 {index === 0 ? (
                   <div className="flex w-full max-w-sm items-center">
                     <span>Question</span>
-                    <span className="h-px flex-1 bg-my-white/25" />
-                    <span className="flex size-11 shrink-0 items-center justify-center border border-my-white/25 text-sm text-my-blue">
+                    <span className="h-px flex-1 bg-my-black/25" />
+                    <span className="flex size-11 shrink-0 items-center justify-center border border-my-black/25 text-sm text-my-blue">
                       ?
                     </span>
-                    <span className="flex-1 border-t border-dashed border-my-white/25" />
+                    <span className="flex-1 border-t border-dashed border-my-black/25" />
                     <span>Answer</span>
                   </div>
                 ) : index === 1 ? (
                   <div className="flex w-full max-w-sm items-center gap-4">
                     <span>Model</span>
-                    <div className="flex h-16 w-20 items-center justify-center gap-2 border border-my-white/20">
-                      <span className="h-7 w-1 bg-my-white/30" />
+                    <div className="flex h-16 w-20 items-center justify-center gap-2 border border-my-black/20">
+                      <span className="h-7 w-1 bg-my-black/30" />
                       <span className="h-5 w-1 bg-my-blue" />
-                      <span className="h-7 w-1 bg-my-white/30" />
+                      <span className="h-7 w-1 bg-my-black/30" />
                     </div>
                     <span className="h-px w-5 bg-my-black/25" />
                     <span className="flex size-12 items-center justify-center border border-my-white/25 leading-tight text-my-blue">
@@ -150,7 +150,7 @@ export const ProblemSection = () => {
                         <span
                           key={barIndex}
                           style={{ height }}
-                          className={`min-w-0 flex-1 ${barIndex === 3 || barIndex === 7 ? "bg-my-blue" : "bg-my-white/25"}`}
+                          className={`min-w-0 flex-1 ${barIndex === 3 || barIndex === 7 ? "bg-my-blue" : "bg-my-black/25"}`}
                         />
                       ),
                     )}
@@ -162,13 +162,13 @@ export const ProblemSection = () => {
                 <p className="text-xs font-semibold uppercase leading-relaxed text-my-blue sm:text-sm">
                   {problem.category}
                 </p>
-                <h3 className="mt-3 text-2xl font-semibold leading-tight text-my-white">
+                <h3 className="mt-3 text-2xl font-semibold leading-tight text-my-black">
                   {problem.title}
                 </h3>
-                <p className="mt-4 text-sm font-satoshi leading-relaxed text-[#929ca6] sm:text-base lg:text-lg">
+                <p className="mt-4 text-sm font-satoshi leading-relaxed text-my-black/60 sm:text-base lg:text-lg">
                   {problem.description}
                 </p>
-                <div className="mt-5 flex items-center rounded border border-my-white/[0.5] border-dashed px-4 py-4 font-mono text-sm leading-relaxed text-[#7b8794]">
+                <div className="mt-5 flex items-center rounded border border-my-black/50 border-dashed px-4 py-4 font-mono text-sm leading-relaxed text-[#7b8794]">
                   <p>
                     <span className="font-semibold text-[#f06464]">
                       <span aria-hidden="true">× </span>

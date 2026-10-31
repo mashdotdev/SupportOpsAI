@@ -75,17 +75,17 @@ const labelClass = "font-mono text-[10px] uppercase tracking-wider";
 function EvidencePanel() {
   return (
     <div className="grid lg:min-h-[420px] lg:grid-cols-[1fr_2fr]">
-      <div className="relative flex min-h-80 flex-col border-b border-my-white/15 p-6 sm:p-10 lg:border-r lg:border-b-0">
+      <div className="relative flex min-h-80 flex-col border-b border-my-black/30 p-6 sm:p-10 lg:border-r lg:border-b-0">
         <p
           className={`${labelClass} absolute top-6 left-6 text-my-blue sm:top-10 sm:left-10`}
         >
           Query / 84F2
         </p>
         <div className="flex flex-1 flex-col items-start justify-center py-12 text-start">
-          <h3 className="max-w-sm text-2xl font-medium leading-tight tracking-tight sm:text-3xl">
+          <h3 className="max-w-sm text-2xl text-my-black font-medium leading-tight tracking-tight sm:text-3xl">
             How can an admin transfer billing ownership?
           </h3>
-          <p className="mt-7 flex flex-wrap justify-start gap-5 font-mono text-[10px] text-my-white/60">
+          <p className="mt-7 flex flex-wrap justify-start gap-5 text-base text-my-black/80">
             <span>6 passages retrieved</span>
             <span>42ms</span>
           </p>
@@ -95,28 +95,28 @@ function EvidencePanel() {
         {SOURCES.map((source, index) => (
           <article
             key={source.title}
-            className="grid grid-cols-[20px_1fr] gap-3 border-b border-my-white/15 py-6 last:border-b-0 sm:gap-5"
+            className="grid grid-cols-[20px_1fr] gap-3 border-b border-my-black/30 py-6 last:border-b-0 sm:gap-5"
           >
-            <span className={`${labelClass} pt-1 text-my-white/50`}>
+            <span className={`${labelClass} pt-1 text-my-black/80`}>
               0{index + 1}
             </span>
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h4 className="text-sm font-semibold">{source.title}</h4>
-                <span className="font-mono text-[9px] uppercase text-my-white/60">
+                <h4 className="text-my-black font-semibold">{source.title}</h4>
+                <span className="text-sm tracking-tight uppercase text-my-black">
                   Relevance {source.relevance}
                 </span>
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-my-white/75">
+              <p className="mt-2 text-lg leading-relaxed text-my-black/75 max-w-xl">
                 {source.before}
                 {source.highlight && (
-                  <mark className="bg-my-blue/15 text-my-white">
+                  <mark className="bg-my-blue/15 text-my-black p-1 rounded-xs">
                     {source.highlight}
                   </mark>
                 )}
                 {source.after}
               </p>
-              <p className="mt-3 font-mono text-[9px] text-my-white/50">
+              <p className="mt-3 text-sm tracking-tight text-my-black/50">
                 help-center / administration
               </p>
             </div>
@@ -132,7 +132,7 @@ function ActionsPanel() {
     <div className="grid items-center gap-6 p-6 sm:p-10 lg:min-h-[420px] lg:grid-cols-[1fr_90px_1fr] lg:gap-5">
       <div className="min-w-0 border border-my-black/15">
         <h3
-          className={`${labelClass} border-b border-my-white/15 px-5 py-4 text-my-blue`}
+          className={`${labelClass} border-b border-my-black/30 px-5 py-4 text-my-blue`}
         >
           Model proposal
         </h3>
@@ -145,7 +145,7 @@ function ActionsPanel() {
             {"\n}"}
           </code>
         </pre>
-        <p className="border-t border-my-white/15 px-5 py-3 font-mono text-[10px] text-my-white/60">
+        <p className="border-t border-my-black/30 px-5 py-3 text-sm tracking-tight text-my-black/80">
           ○ Proposed, not executed
         </p>
       </div>
@@ -153,38 +153,38 @@ function ActionsPanel() {
         className="flex flex-col items-center gap-2 text-center"
         aria-hidden="true"
       >
-        <span className="font-mono text-[8px] uppercase text-my-white/50">
+        <span className="text-sm tracking-tight uppercase text-my-black/50">
           Server boundary
         </span>
         <span className="text-2xl text-my-blue lg:hidden">↓</span>
         <span className="hidden w-full text-2xl text-my-blue lg:block">⟶</span>
       </div>
-      <div className="min-w-0 border border-my-white/15">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-my-white/15 px-5 py-4 text-my-blue">
+      <div className="min-w-0 border border-my-black/30">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-my-black/30 px-5 py-4 text-my-blue">
           <h3 className={labelClass}>Server execution</h3>
-          <span className="font-mono text-[9px] uppercase">Validated</span>
+          <span className="text-sm tracking-tight uppercase">Validated</span>
         </div>
         {["Schema validation", "Permission check"].map((check) => (
           <div
             key={check}
-            className="flex justify-between gap-3 border-b border-my-white/10 px-5 py-4 text-xs"
+            className="flex justify-between gap-3 border-b border-my-black/20 px-5 py-4 text-sm"
           >
-            <span className="text-my-white/70">{check}</span>
+            <span className="text-my-black/70">{check}</span>
             <span className="font-mono text-[10px] text-my-blue">Passed</span>
           </div>
         ))}
         <div className="m-4 bg-my-blue/5 p-4">
-          <p className={`${labelClass} mb-4 text-my-white/50`}>
+          <p className={`${labelClass} mb-4 text-my-black/50`}>
             Safe mock result
           </p>
-          <dl className="space-y-3 font-mono text-[11px]">
+          <dl className="space-y-3 text-sm tracking-tight">
             {[
               ["plan", "Team annual"],
               ["status", "Active"],
               ["billing_owner", "a···@example.com"],
             ].map(([key, value]) => (
               <div key={key} className="flex flex-wrap justify-between gap-2">
-                <dt className="text-my-white/60">{key}</dt>
+                <dt className="text-my-black/60">{key}</dt>
                 <dd>{value}</dd>
               </div>
             ))}
@@ -214,12 +214,12 @@ function EvaluationPanel() {
               key={label}
               className="border-b border-my-black/15 pb-5 lg:pt-2"
             >
-              <dt className="font-mono text-[9px] uppercase text-my-white/60">
+              <dt className="text-sm tracking-tight uppercase text-my-black/60">
                 {label}
               </dt>
               <dd className="mt-3 text-3xl font-medium">
                 {value}
-                <span className="font-mono text-xs text-my-white/60">%</span>
+                <span className="font-mono text-base text-my-black/60">%</span>
               </dd>
             </div>
           ))}
@@ -233,7 +233,7 @@ function EvaluationPanel() {
           tabIndex={0}
         >
           <table className="w-full min-w-[560px] text-left text-xs">
-            <thead className="border-b border-my-black/15 font-mono text-[9px] uppercase text-my-white/60">
+            <thead className="border-b border-my-black/30 text-sm tracking-tight uppercase text-my-black/60">
               <tr>
                 {["Case", "Test", "Outcome", "Note"].map((heading) => (
                   <th key={heading} className="px-3 py-4 font-normal">
@@ -244,11 +244,11 @@ function EvaluationPanel() {
             </thead>
             <tbody>
               {CASES.map((row) => (
-                <tr key={row.id} className="border-b border-my-black/15">
-                  <td className="px-3 py-6 font-mono text-[10px] text-my-white/60">
+                <tr key={row.id} className="border-b border-my-black/30">
+                  <td className="px-3 py-6 text-sm tracking-tight text-my-black/60">
                     {row.id}
                   </td>
-                  <th scope="row" className="px-3 py-6 font-medium">
+                  <th scope="row" className="px-3 py-6 font-medium text-base">
                     {row.test}
                   </th>
                   <td className="px-3 py-6">
@@ -258,7 +258,7 @@ function EvaluationPanel() {
                       {row.outcome}
                     </span>
                   </td>
-                  <td className="px-3 py-6 font-mono text-[10px] text-my-white/60">
+                  <td className="px-3 py-6  text-my-black/80 text-sm">
                     {row.note}
                   </td>
                 </tr>
@@ -266,7 +266,7 @@ function EvaluationPanel() {
             </tbody>
           </table>
         </div>
-        <p className="mt-5 font-mono text-[9px] uppercase text-my-white/50">
+        <p className="mt-5 text-sm tracking-tight uppercase text-my-black/70">
           Seeded evaluation set · 4 of 24 cases shown
         </p>
       </div>
@@ -280,11 +280,11 @@ export const SupportOpsDemo = () => {
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   return (
-    <div className="flex flex-1 flex-col border border-my-white/20 border-dashed font-satoshi text-my-white">
+    <div className="flex flex-1 flex-col border border-my-black/50 border-dashed font-satoshi text-my-black">
       <div
         role="tablist"
         aria-label="Inside SupportOps"
-        className="grid grid-cols-3 border-b border-my-white/15"
+        className="grid grid-cols-3 border-b border-my-black/15"
       >
         {TABS.map((tab, index) => (
           <button
@@ -314,20 +314,20 @@ export const SupportOpsDemo = () => {
             className={`min-w-0 cursor-pointer border-r border-b-2 p-3 text-left transition-colors last:border-r-0 hover:bg-my-blue/5 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-my-blue sm:p-6 ${activeTab === index ? "border-b-my-blue border-r-my-black/15 bg-my-blue/5" : "border-b-transparent border-r-my-black/15"}`}
           >
             <span
-              className={`mb-2 block font-mono text-[10px] ${activeTab === index ? "text-my-blue" : "text-my-black/50"}`}
+              className={`mb-2 block text-sm ${activeTab === index ? "text-my-blue" : "text-my-black/50"}`}
             >
               0{index + 1}
             </span>
-            <span className="block text-xs font-semibold sm:text-base">
+            <span className="block text-sm font-semibold sm:text-xl">
               {tab.title}
             </span>
-            <span className="mt-2 hidden text-xs leading-relaxed text-my-white/60 sm:block">
+            <span className="mt-2 hidden text-sm leading-relaxed text-my-black/60 sm:block">
               {tab.description}
             </span>
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-my-white/15 px-4 py-4 font-mono text-[9px] uppercase tracking-wider text-my-white/60">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-my-black/30 px-4 py-4 text-sm uppercase tracking-tight text-my-black/60">
         <span className="flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-my-blue" />
           SupportOps / workspace_84F2

@@ -27,7 +27,7 @@ export const Navbar = () => {
   return (
     <div
       ref={navRef}
-      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))]  rounded-lg left-1/2 z-999 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden  bg-my-white backdrop-blur-3xl  text-my-black lg:w-[85%] xl:w-[75%]"
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))]  rounded-xs left-1/2 z-999 w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 overflow-hidden  bg-[#0a0a0a]  text-my-white lg:w-[85%] xl:w-[75%]"
       onKeyDown={(event) => {
         if (event.key === "Escape" && isOpen) {
           setIsOpen(false);
@@ -47,7 +47,7 @@ export const Navbar = () => {
             <Link
               key={item.title}
               href={item.href}
-              className="rounded-sm py-3 transition-colors hover:text-white/70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#faf5ef]"
+              className="rounded-sm py-3 transition-colors hover:text-black/70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#faf5ef]"
             >
               <span className="uppercase text-sm font-medium font-satoshi">
                 {item.title}
@@ -74,7 +74,7 @@ export const Navbar = () => {
         className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out motion-reduce:transition-none ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="mx-4 border-t border-white/15 py-4 sm:mx-6">
+          <div className="mx-4 border-t border-black/15 py-4 sm:mx-6">
             <nav
               aria-label="Mobile navigation"
               className="mb-4 grid grid-cols-2 gap-2 lg:hidden"
@@ -84,7 +84,7 @@ export const Navbar = () => {
                   key={item.title}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className="flex min-h-11 items-center rounded-lg px-3 text-xs font-medium uppercase transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#faf5ef] sm:text-sm"
+                  className="flex min-h-11 items-center rounded-lg px-3 text-xs font-medium uppercase transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-my-black sm:text-sm"
                 >
                   {item.title}
                 </Link>

@@ -4,7 +4,7 @@ import { SupportOpsDemo } from "./support-ops-demo";
 export const SupportOps = () => {
   return (
     <section id="demo" className="min-h-svh relative flex flex-col pb-16">
-      <div className="border-t  border-white/20 min-h-[15svh]">
+      <div className="border-t  border-my-black/30 min-h-[15svh]">
         <div className="container mx-auto px-4 xl:px-0 flex flex-col gap-4 min-h-[15svh] py-12">
           <p className="text-my-blue">{"//"} INSIDE SUPPRTOPS</p>
           <h2 className="min-w-0  max-w-2xl text-[clamp(1.75rem,3.5vw,3.5rem)] font-medium leading-tight tracking-tight">

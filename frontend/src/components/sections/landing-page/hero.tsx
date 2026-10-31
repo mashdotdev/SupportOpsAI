@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { IoArrowUpOutline } from "react-icons/io5";
 
-import image2 from "@public/images/Futuristic AI Knowledge Graph.png";
-import image3 from "@public/images/Teal Cybernetic Data Flow.png";
+import image1 from "@public/images/row-1-column-1.png";
+import image2 from "@public/images/row-1-column-2.png";
+import image3 from "@public/images/row-1-column-3.png";
 
 import Image, { StaticImageData } from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +16,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const IMAGES: StaticImageData[] = [image2, image2, image3];
+const IMAGES: StaticImageData[] = [image1, image2, image3];
 
 export const Hero = () => {
   const [isAnimating, setIsAnimating] = useState(true);
@@ -103,10 +104,14 @@ export const Hero = () => {
         duration: 1,
         stagger: 0.2,
         ease: "power3.inOut",
-      }).to(
+      });
+
+      const offsetsX = [-16, 0, 16];
+
+      tl.to(
         boxes,
         {
-          x: 0,
+          x: (index) => offsetsX[index],
           y: 0,
           height: (index) => boxesRects[index].height,
           width: (index) => boxesRects[index].width,
@@ -115,6 +120,13 @@ export const Hero = () => {
           ease: "power3.inOut",
         },
         "+=0.5",
+      ).to(
+        [boxes[0], boxes[2]],
+        {
+          x: 0,
+          duration: 0.5,
+        },
+        "+=0.3",
       );
 
       if (!reduceMotion) {
@@ -148,22 +160,22 @@ export const Hero = () => {
               <div className="w-full min-w-0">
                 <div
                   data-hero-badge
-                  className="mb-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-black/10 px-3 py-1.5 font-mono text-[8px] uppercase tracking-wide sm:mb-8 sm:text-[9px] lg:mb-9"
+                  className="mb-6 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-black/10 px-3 py-1.5 font-mono text-[8px] uppercase tracking-wide sm:mb-8 sm:text-[9px] lg:mb-9"
                 >
                   <span className="size-1.5 shrink-0 rounded-full bg-my-blue" />
                   <span className="text-my-blue text-sm">
                     AI support infrastructure
                   </span>
-                  <span aria-hidden="true" className="text-[#FAF5EF]">
+                  <span aria-hidden="true" className="text-my-black">
                     ·
                   </span>
-                  <span className="text-my-white text-sm">
+                  <span className="text-my-black text-sm">
                     Built for reliability
                   </span>
                 </div>
                 <h1
                   id="hero-title"
-                  className="text-[clamp(2rem,8vw,3.5rem)] leading-[1.02] font-medium tracking-[-0.045em] text-my-white lg:text-[clamp(2.5rem,5.6vw,7rem)]"
+                  className="text-[clamp(2rem,8vw,3.5rem)] leading-[1.02] font-medium tracking-[-0.045em] text-my-black lg:text-[clamp(2.5rem,5.6vw,7rem)]"
                 >
                   Answers grounded <br /> in{" "}
                   <span className="text-my-blue">evidence</span>.
@@ -173,7 +185,7 @@ export const Hero = () => {
                 </h2>
               </div>
               <div className="flex w-full min-w-0 flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pb-0.5">
-                <p className="w-full min-w-0 text-sm leading-relaxed text-my-white/75 sm:text-base lg:max-w-lg lg:flex-1 font-satoshi">
+                <p className="w-full min-w-0 text-sm leading-relaxed text-my-black/75 sm:text-base lg:max-w-lg lg:flex-1 font-satoshi">
                   Give your AI support agent the knowledge, controlled tools,
                   and continuous evaluation loop it needs to resolve high-stakes
                   customer questions with certainty.
@@ -182,7 +194,7 @@ export const Hero = () => {
                   <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:flex-wrap">
                     <Link
                       href="#demo"
-                      className="inline-flex min-h-10 items-center justify-center gap-3 font-satoshi rounded-lg bg-my-blue px-4 py-2.5 text-xs font-semibold text-my-white transition-colors hover:bg-[#CCFF00]/75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
+                      className="inline-flex min-h-10 items-center justify-center gap-3 font-satoshi rounded-xs bg-my-blue px-4 py-2.5 text-xs font-semibold text-my-white transition-colors hover:bg-[#CCFF00]/75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
                     >
                       Explore the live demo
                       <IoArrowUpOutline
@@ -192,12 +204,12 @@ export const Hero = () => {
                     </Link>
                     <Link
                       href="#how-it-works"
-                      className="inline-flex min-h-10 items-center justify-center font-satoshi rounded-lg border border-black/15 px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
+                      className="inline-flex min-h-10 items-center justify-center font-satoshi rounded-xs border border-black/15 px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
                     >
                       See how it works
                     </Link>
                   </div>
-                  <ul className="flex w-full flex-wrap items-start gap-3 font-mono text-[10px] leading-tight text-[#626d7a] sm:gap-4">
+                  <ul className="flex w-full flex-wrap items-start gap-3 text-sm leading-tight text-[#626d7a] sm:gap-4">
                     <li className="flex-1">
                       Grounded
                       <br />
@@ -207,7 +219,6 @@ export const Hero = () => {
                       <span>
                         Controlled tool
                         <br />
-                        use
                       </span>
                     </li>
                     <li className="flex flex-1 gap-3 before:text-black/20 before:content-['/'] sm:gap-4">
@@ -224,27 +235,31 @@ export const Hero = () => {
           </div>
 
           {/*bottom*/}
-          <div className="flex flex-col lg:flex-2 lg:flex-row lg:justify-between gap-[1svh]">
+          <div className="flex w-full flex-nowrap justify-center">
             {IMAGES.map((src, index) => (
               <div
                 key={index}
-                className="relative min-w-0 w-full aspect-3/4 flex-none lg:flex-1 lg:max-w-[min(28vw,38svh)]"
+                className="relative w-1/3 min-w-0 shrink-0"
+                style={{
+                  aspectRatio: "1115 / 1882",
+                }}
               >
                 <div
                   ref={(el) => {
                     boxesRef.current[index] = el;
                   }}
-                  className="absolute inset-0 overflow-hidden rounded-lg"
+                  className="absolute inset-0 overflow-hidden"
                 >
                   <Image
                     ref={(el) => {
                       imagesRef.current[index] = el;
                     }}
                     priority
+                    sizes="33vw"
                     src={src}
                     alt=""
                     draggable={false}
-                    className="size-full block object-cover scale-115"
+                    className="size-full block object-cover"
                   />
                 </div>
               </div>
