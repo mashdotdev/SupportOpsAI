@@ -37,10 +37,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                 <h2 className="text-[clamp(2rem,3vw,3.5rem)] font-medium leading-tight tracking-tight">
                   Get Started
                   <br />
-                  with SupportOps{" "}
-                  <span className=" font-bold">
-                    AI
-                  </span>
+                  with SupportOps <span className=" font-bold">AI</span>
                 </h2>
                 <p className="max-w-52 text-sm leading-relaxed text-white/65 xl:text-base">
                   Complete these easy steps to register your account.
