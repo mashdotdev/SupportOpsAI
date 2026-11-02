@@ -78,10 +78,12 @@ export function Workspace({ email }: { email: string }) {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-6 py-24">
+    <main className="mx-auto flex min-h-svh container flex-col gap-8 px-6 py-24">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Support workspace</h1>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-medium">
+            Workspace
+          </h1>
           <p>{email}</p>
         </div>
         <Button variant="outline" onPress={signOut} isDisabled={pending}>

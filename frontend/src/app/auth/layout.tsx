@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import "../globals.css";
 import Image from "next/image";
 import localFont from "next/font/local";
+import Link from "next/link";
 
 const satoshi = localFont({
   src: "../fonts/satoshi-variable.woff2",
@@ -37,7 +38,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                 <h2 className="text-[clamp(2rem,3vw,3.5rem)] font-medium leading-tight tracking-tight">
                   Get Started
                   <br />
-                  with SupportOps <span className=" font-bold">AI</span>
+                  with{" "}
+                  <Link
+                    href={"/"}
+                    className="underline underline-offset-4 decoration-3 decoration-my-blue"
+                  >
+                    SupportOps <span className="font-bold">AI</span>
+                  </Link>
                 </h2>
                 <p className="max-w-52 text-sm leading-relaxed text-white/65 xl:text-base">
                   Complete these easy steps to register your account.
