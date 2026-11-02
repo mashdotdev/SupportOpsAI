@@ -20,7 +20,7 @@ export default function WorkspaceLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <SidebarProvider
-          style={{ "--sidebar-width": "280px" } as CSSProperties}
+          // style={{ "--sidebar-width": "280px" } as CSSProperties}
         >
           <AppSidebar
             ownerName={

@@ -38,7 +38,7 @@ import {
 const sidebarTheme = {
   "--sidebar": "#ffffff",
   "--sidebar-foreground": "#000000",
-  "--sidebar-primary": "#c5ff63",
+  "--sidebar-primary": "#0593c6",
   "--sidebar-primary-foreground": "#111800",
   "--sidebar-accent": "#f5f5f5",
   "--sidebar-accent-foreground": "#000000",
@@ -57,10 +57,22 @@ const navigation: {
     label: "WORKSPACE",
     items: [
       { label: "Overview", icon: LayoutDashboard, href: "/workspace" },
-      { label: "Conversations", icon: MessagesSquare, badge: "12" },
-      { label: "AI Agents", icon: Bot },
-      { label: "Knowledge Base", icon: Database },
-      { label: "Playground", icon: FlaskConical },
+      {
+        label: "Conversations",
+        icon: MessagesSquare,
+        href: "/workspace/conversations",
+      },
+      { label: "AI Agents", icon: Bot, href: "/workspace/agents" },
+      {
+        label: "Knowledge Base",
+        icon: Database,
+        href: "/workspace/knowledge-base",
+      },
+      {
+        label: "Playground",
+        icon: FlaskConical,
+        href: "/workspace/playground",
+      },
     ],
   },
   {
