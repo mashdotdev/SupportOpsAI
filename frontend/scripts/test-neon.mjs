@@ -8,12 +8,12 @@ const base = process.env.TEST_BASE_URL || "http://localhost:3001";
 const users = [];
 function browser() {
   const cookies = new Map();
-  return async (path, body) => {
+  return async (path, body, options = {}) => {
     const response = await fetch(`${base}${path}`, {
       method: body === undefined ? "GET" : "POST",
-      headers: { "Content-Type": "application/json", Origin: base,
+      headers: { "Content-Type": "application/json", Origin: options.origin ?? base,
         Cookie: [...cookies].map(([key, value]) => `${key}=${value}`).join("; ") },
-      body: body === undefined ? undefined : JSON.stringify(body), redirect: "manual",
+      body: body === undefined ? undefined : options.rawBody ?? JSON.stringify(body), redirect: "manual",
     });
     for (const cookie of response.headers.getSetCookie()) {
       const [pair] = cookie.split(";");
@@ -36,6 +36,7 @@ try {
   assert.ok(loginPage.data.includes("Sign In") || loginPage.data.includes("Sign in"));
   assert.equal((await anonymous("/api/tickets")).status, 401);
   assert.equal((await anonymous("/api/tickets", { subject: "Rejected" })).status, 401);
+  assert.equal((await anonymous("/api/tickets", { subject: "Rejected" }, { origin: "https://invalid.example" })).status, 403);
   assert.equal((await anonymous("/workspace")).status, 307);
   console.log("PASS: anonymous page and API access denied");
 
@@ -49,18 +50,26 @@ try {
   assert.equal(session.data?.user?.email, email, "Signup did not establish a session (email verification may be required)");
   const workspace = await owner("/workspace");
   assert.equal(workspace.status, 200);
-  assert.ok(workspace.data.includes("Support workspace"));
+  assert.ok(workspace.data.includes("Workspace"));
   console.log("PASS: Neon Auth signup and cookie session");
 
   const subject = `End-to-end ticket ${randomUUID()}`;
   const created = await owner("/api/tickets", { subject });
   assert.equal(created.status, 201, JSON.stringify(created.data));
   const ticketId = created.data.ticket.id;
+  assert.deepEqual(Object.keys(created.data.ticket).sort(), ["created_at", "id", "subject"]);
+  assert.equal(new Date(created.data.ticket.created_at).toISOString(), created.data.ticket.created_at);
   const stored = await db.query("SELECT subject, user_id FROM support_tickets WHERE id = $1", [ticketId]);
   assert.equal(stored.rows[0].subject, subject);
   assert.equal(stored.rows[0].user_id, session.data.user.id);
   assert.ok((await owner("/api/tickets")).data.tickets.some(ticket => ticket.id === ticketId));
   assert.equal((await owner("/api/tickets", { subject: " " })).status, 400);
+  assert.equal((await owner("/api/tickets", { subject: "x".repeat(201) })).status, 400);
+  assert.equal((await owner("/api/tickets", { subject: 123 })).status, 400);
+  assert.equal((await owner("/api/tickets", {}, { rawBody: "{" })).status, 400);
+  const boundary = await owner("/api/tickets", { subject: `  ${"x".repeat(200)}  ` });
+  assert.equal(boundary.status, 201);
+  assert.equal(boundary.data.ticket.subject, "x".repeat(200));
   console.log("PASS: authenticated ticket write/read, database persistence, input validation");
 
   assert.equal((await owner("/api/auth/sign-out", {})).status, 200);
@@ -79,6 +88,23 @@ try {
   assert.equal(isolated.status, 200);
   assert.equal(isolated.data.tickets.length, 0);
   console.log("PASS: second user cannot read first user's tickets");
+
+  await db.query(`INSERT INTO support_tickets (user_id, subject, created_at)
+    SELECT $1, 'Pagination fixture ' || n, now() - n * interval '1 minute'
+    FROM generate_series(1, 101) AS n`, [session.data.user.id]);
+  const limited = await returning("/api/tickets");
+  assert.equal(limited.status, 200);
+  assert.equal(limited.data.tickets.length, 100);
+  const expected = await db.query(
+    "SELECT id FROM support_tickets WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100",
+    [session.data.user.id],
+  );
+  assert.deepEqual(limited.data.tickets.map(ticket => ticket.id), expected.rows.map(ticket => ticket.id));
+  for (const ticket of limited.data.tickets) {
+    assert.deepEqual(Object.keys(ticket).sort(), ["created_at", "id", "subject"]);
+    assert.equal(new Date(ticket.created_at).toISOString(), ticket.created_at);
+  }
+  console.log("PASS: newest-first ordering, 100-ticket limit, and response contract");
 } finally {
   for (const email of users) {
     await db.query('DELETE FROM support_tickets WHERE user_id IN (SELECT id::text FROM neon_auth."user" WHERE email = $1)', [email]);

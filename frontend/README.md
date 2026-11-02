@@ -18,19 +18,56 @@ Keep `.env.local` private. See `.env.example` for variable names. Generate an
 additional `NEON_AUTH_COOKIE_SECRET` with at least 32 random characters; deployment
 pulls the database and Auth URLs but does not generate this application secret.
 
-The app uses a shared `pg` pool in the Next.js Node runtime with pooled
-`DATABASE_URL`. Migrations use `DATABASE_URL_UNPOOLED`. Database credentials stay
+The app uses Prisma 7 with the `@prisma/adapter-pg` driver and a shared, lazy
+server-only client in the Next.js Node runtime. Queries use pooled `DATABASE_URL`;
+Prisma migration commands use `DATABASE_URL_UNPOOLED`. Database credentials stay
 server-side. Every ticket API request checks the Auth session, and queries scope
 rows to that user's ID. POST also validates the request origin and subject.
-For Vercel Fluid hosting, attach the pool with `@vercel/functions` before deploying;
-other runtimes should follow the installed Neon connection guidance.
+The pool is limited to five connections with 10-second idle/connect timeouts.
+Neon Auth manages its own `neon_auth` schema; Prisma manages application tables in
+`public` only. The ticket API preserves its `created_at` ISO-string response field.
+
+## Prisma schema and migrations
+
+Run all commands from `frontend/`. `prisma7.config.ts` uses Next's environment
+loader, including `.env.local`; explicitly supplied environment variables win.
+Never expose either database URL through `NEXT_PUBLIC_` variables.
+
+For an **existing database** containing `support_tickets`, first verify its schema
+matches `prisma/migrations/0_init/migration.sql` (including the subject CHECK and
+user/date index), then record the baseline once without recreating its tables:
 
 ```sh
-npm run db:migrate
-npm run build
-npm run start -- --port 3001
+bun run db:baseline
+bun run db:migrate
+```
+
+For a **new, empty database**, run only `bun run db:migrate`; this creates the
+table and constraints. Do not mark the baseline applied on an empty database.
+The baseline replaces the former SQL migration runner.
+
+For subsequent schema changes, use an isolated Neon development branch, edit
+`prisma/schema.prisma`, and run `bun run db:migrate:dev --name descriptive_name`.
+Review and commit the generated SQL, then run `bun run db:generate`. Use only
+`bun run db:migrate` (Prisma Migrate deploy) on production. Never use reset or
+`db push` against an existing production database. Development migrations may
+require a disposable shadow database; never use production as the shadow target.
+
+Prisma cannot express the subject-length CHECK in its model; maintain it in SQL
+migrations. Keep the database-generated UUID, `timestamptz(6)`, and mapped index
+when evolving the model. No foreign key to managed Auth tables is introduced.
+
+Useful commands: `bun run db:validate`, `bun run db:generate`,
+`bun run db:status`, and `bun run db:studio`. Generated client code is ignored by
+Git and ESLint; both `dev` and `build` regenerate it automatically. Migration
+deployment is explicit and is never run as part of a build.
+
+```sh
+bun run db:migrate
+bun run build
+bun run start --port 3001
 # In another terminal:
-npm run test:neon
+bun run test:neon
 ```
 
 On Windows with PowerShell script execution disabled, use `npm.cmd` in place of
@@ -41,15 +78,20 @@ registration, and recovery UI.
 `test:neon` uses the running app at `http://localhost:3001` (override with
 `TEST_BASE_URL`). It creates synthetic test users and tickets, checks anonymous
 access denial, signup, session cookies, persisted ticket writes/reads, validation,
-logout, fresh login, and isolation between users, then deletes its test data.
+logout, fresh login, isolation between users, newest-first ordering, the 100-row
+limit, and response fields, then deletes its test data. Direct SQL in this test
+independently checks Prisma's persistence and cleans up managed Auth test users.
 It requires database access for persistence assertions and cleanup. Email delivery,
 password recovery, and OAuth are not covered by this test. Configure the deployed
 frontend origin as a trusted Neon Auth domain before publishing it.
 
-Validated on 2026-10-30: production build and HTTP end-to-end test passed. The
-migration was first validated on a temporary branch, which was then removed.
-Browser visual verification was unavailable because the browser access host was
-not running.
+Validated on 2026-11-02: Prisma validation/generation, production build (including
+TypeScript), ESLint, 12 auth tests, and the expanded HTTP end-to-end test passed.
+Baseline adoption preserved the branch's existing ticket rows; deployment to an
+empty database verified defaults, indexes, and the subject CHECK. Both migration
+paths were tested on a temporary Neon branch before recording the baseline in
+the existing production database. Production migration status is up to date.
+
 
 ## Getting Started
 

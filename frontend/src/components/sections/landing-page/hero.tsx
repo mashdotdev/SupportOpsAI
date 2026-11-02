@@ -152,9 +152,9 @@ export const Hero = () => {
   );
 
   return (
-    <section ref={root} className="relative min-h-svh hero-section">
+    <section ref={root} className="relative hero-section">
       <div className="container mx-auto px-4 xl:px-0">
-        <div className="flex min-h-svh flex-col">
+        <div className="flex lg:min-h-svh flex-col">
           {/*top*/}
           <div
             ref={topRef}
