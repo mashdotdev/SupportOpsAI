@@ -52,5 +52,6 @@ export async function POST(request: Request) {
     data: { userId: session.user.id, subject },
     select: ticketFields,
   });
+
   return Response.json({ ticket: serializeTicket(ticket) }, { status: 201 });
 }
