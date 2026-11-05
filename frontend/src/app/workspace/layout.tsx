@@ -1,4 +1,4 @@
-import { Suspense, type CSSProperties, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import "../globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/workspace/app-sidebar";
@@ -6,6 +6,11 @@ import { connection } from "next/server";
 import { auth } from "@/lib/auth/server";
 import { redirect } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+
+export const metadata = {
+  title: "SupportOps AI Workspace",
+  description: "Manage your knowledge base and test grounded support answers.",
+};
 
 async function SidebarOwnerName() {
   await connection();

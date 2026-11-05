@@ -1,0 +1,22 @@
+services:
+  api:
+    build: ./backend
+    image: supportops-backend:local
+    env_file: ./backend/.env
+    environment:
+      EMBEDDING_MODEL_PATH: /app/data/models/bge-small-en-v1.5
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+  worker:
+    image: supportops-backend:local
+    env_file: ./backend/.env
+    environment:
+      EMBEDDING_MODEL_PATH: /app/data/models/bge-small-en-v1.5
+    command: ["python", "-m", "supportops.worker"]
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy

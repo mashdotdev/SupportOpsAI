@@ -19,3 +19,47 @@ model SupportTicket {
   @@map("support_tickets")
   @@schema("public")
 }
+
+model KnowledgeDocument {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @map("user_id") @db.Text
+  filename         String    @db.Text
+  mediaType        String    @map("media_type") @db.Text
+  byteSize         Int       @map("byte_size")
+  storageKey       String    @unique @map("storage_key") @db.Text
+  stagingKey       String    @unique @map("staging_key") @db.Text
+  checksum         String?   @db.Text
+  status           String    @default("awaiting_upload") @db.Text
+  indexGeneration  String?   @map("index_generation") @db.Uuid
+  activeGeneration String?   @map("active_generation") @db.Uuid
+  chunkCount       Int       @default(0) @map("chunk_count")
+  error            String?   @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  jobs             KnowledgeJob[]
+
+  @@index([userId, createdAt(sort: Desc)], map: "knowledge_documents_user_created_idx")
+  @@index([status, createdAt], map: "knowledge_documents_status_created_idx")
+  @@map("knowledge_documents")
+  @@schema("public")
+}
+
+model KnowledgeJob {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId String   @map("document_id") @db.Uuid
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  operation  String   @db.Text
+  generation String   @db.Uuid
+  status     String   @default("queued") @db.Text
+  attempts   Int      @default(0)
+  runAfter   DateTime @default(now()) @map("run_after") @db.Timestamptz(6)
+  leaseUntil DateTime? @map("lease_until") @db.Timestamptz(6)
+  leaseToken String?  @map("lease_token") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([documentId, operation, generation], map: "knowledge_jobs_document_operation_generation_key")
+  @@index([status, runAfter], map: "knowledge_jobs_status_run_after_idx")
+  @@map("knowledge_jobs")
+  @@schema("public")
+}

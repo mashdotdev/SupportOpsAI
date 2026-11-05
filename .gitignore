@@ -1,6 +1,7 @@
 # Dependencies and generated output
 node_modules/
 .next/
+.next-*/
 out/
 build/
 dist/
@@ -20,3 +21,5 @@ venv/
 *.log
 .DS_Store
 Thumbs.db
+backend/data/
+.pytest_cache/
