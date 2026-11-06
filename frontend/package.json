@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test:auth": "bun test scripts/auth-forms.test.mjs",
     "test:rag": "bun test scripts/rag.test.mjs",
+    "test:agents": "bun test scripts/agents.test.mjs",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate deploy",

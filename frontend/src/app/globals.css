@@ -1,6 +1,12 @@
 @import "tailwindcss";
+
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+
+/* Readable secondary text on the workspace's warm background. */
+.agent-workspace {
+  --muted-foreground: oklch(0.5 0 0);
+}
 
 @custom-variant dark (&:is(.dark *));
 

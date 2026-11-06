@@ -112,6 +112,53 @@ before routing production traffic. Use the worker logs to monitor failures and
 queue status/attempt counts in `knowledge_jobs`. Operational logs omit document
 contents, questions, credentials, signed URLs, and provider reasoning.
 
+## Saved AI agents
+
+`/workspace/ai-agent` manages owned support agents. Configuration includes name,
+free OpenRouter model, instructions, authority (scope, communication style,
+boundaries, escalation rules/message), and knowledge access. `all` includes future
+ready uploads; `selected` is an explicit allowlist, including an empty allowlist.
+Agent attachments use composite ownership foreign keys. Retrieval and final
+citation validation both apply the saved scope and check for concurrent agent
+changes. Document removal never expands an agent's scope.
+
+The Next.js `/api/agents/[[...path]]` proxy exposes `/v1/agents` CRUD, `/models`,
+and `/{id}/chat`. Updates supply the last saved `version` and return 409 on a
+conflict. Agent chat also supplies `version`; changing the configuration starts
+a new temporary conversation. The browser never supplies runtime instructions,
+authority, or model overrides to chat.
+
+The model catalog is cached for five minutes, filtered for zero pricing and
+tool-capable `:free` models, and checked again at execution. `openrouter/free` is
+an explicit automatic option. Provider requests cap prompt, completion, request,
+and image prices at zero, and send no model fallback list. Catalog eligibility
+does not guarantee endpoint capacity; errors remain visible and retries are
+user initiated. See [OpenRouter provider routing](https://openrouter.ai/docs/guides/routing/provider-selection).
+
+Only the knowledge search tool is available. Authority guides model responses;
+it does not grant actions. Escalation returns the owner's configured message and
+does not create tickets, notify staff, or transfer conversations. Greeting and
+clarification markers are replaced with application text. Knowledge answers must
+pass citation identity checks; ungrounded answers fall back to escalation.
+Custom-agent text is held until final scope/citation validation before it enters
+the SSE response. Status events and heartbeats remain streamed throughout.
+As with the playground, citation identity checks do not establish semantic
+entailment or guarantee model compliance with every behavior preference.
+
+Prisma migration `202611060001_ai_agents` must be deployed to the database used
+by the backend before agent APIs are enabled. First validate on an isolated
+branch, using the existing direct-connection migration workflow. No changes to
+embeddings, object storage, Qdrant collections, or indexing are required.
+
+### Agent verification
+
+`tests/test_agents.py` covers catalog pricing/capabilities/cache failures, bounded
+configuration, the real Agents SDK with a fixture provider, marker privacy,
+authority composition, zero-price routing, scope changes, and rejected citations.
+With `TEST_DATABASE_URL`, it also tests real CRUD, update conflicts, cross-user
+permissions, soft-deleted files, empty scopes, and Qdrant document filtering.
+It never calls a live model. Use the same isolated-database requirements below.
+
 ## Tests
 
 ```sh

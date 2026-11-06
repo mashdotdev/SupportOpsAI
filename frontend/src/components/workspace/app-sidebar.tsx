@@ -62,7 +62,7 @@ const navigation: {
         icon: MessagesSquare,
         href: "/workspace/conversations",
       },
-      { label: "AI Agents", icon: Bot, href: "/workspace/agents" },
+      { label: "AI Agents", icon: Bot, href: "/workspace/ai-agent" },
       {
         label: "Knowledge Base",
         icon: Database,

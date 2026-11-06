@@ -122,6 +122,31 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Saved AI agents
+
+Visit `/workspace/ai-agent` to create, edit, test, and delete support agents. Each
+agent has a free OpenRouter model, instructions, structured authority settings,
+and either all owned knowledge documents or an explicit selected set. The model
+picker supports search. Save changes before testing; the editor and playground
+always use the saved version. Conversations are temporary and reset on refresh,
+agent changes, and configuration version changes.
+
+Run the FastAPI backend alongside Next.js and configure the matching server-only
+`BACKEND_API_TOKEN` and `BACKEND_URL`. Apply the committed agent migration to the
+backend's database using the existing isolated-branch-first Prisma workflow.
+The backend and frontend must use the intended environment; do not copy test
+branch credentials over production environment files.
+
+Authority defines scope, communication style, boundaries, escalation rules, and
+the escalation message. Escalation displays that message; it does not perform a
+handoff or create a ticket. Only knowledge search is available. See the
+[backend documentation](../backend/README.md#saved-ai-agents) for API, filtering,
+model pricing enforcement, and verification details.
+
+Run `bun run test:agents` for agent proxy authorization, PATCH forwarding,
+payload limits, path restrictions, and deletion response checks. Existing auth
+and RAG suites remain available through `test:auth` and `test:rag`.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

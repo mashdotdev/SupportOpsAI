@@ -8,10 +8,12 @@ from supportops.config import settings
 from supportops.db import transaction
 from supportops.documents import router as document_router
 from supportops.chat import router as chat_router
+from supportops.agent_routes import router as agent_router
 
 app = FastAPI(title="SupportOps AI Backend", version="1.0.0")
 app.include_router(document_router)
 app.include_router(chat_router)
+app.include_router(agent_router)
 log = logging.getLogger("supportops.api")
 
 

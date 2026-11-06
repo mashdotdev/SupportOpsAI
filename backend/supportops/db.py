@@ -33,7 +33,7 @@ def owned(connection, document_id, user_id, *, lock=False):
         + (" FOR UPDATE" if lock else ""), (document_id, user_id)).fetchone()
 
 
-def valid_sources(user_id: str, sources: list[dict]) -> list[dict]:
+def valid_sources(user_id: str, sources: list[dict], document_ids=None) -> list[dict]:
     if not sources:
         return []
     with transaction() as connection:
@@ -41,10 +41,14 @@ def valid_sources(user_id: str, sources: list[dict]) -> list[dict]:
             "SELECT id, active_generation FROM knowledge_documents WHERE user_id=%s AND status='ready' AND id=ANY(%s::uuid[])",
             (user_id, list({s["document_id"] for s in sources}))).fetchall()
     allowed = {(str(row["id"]), str(row["active_generation"])) for row in rows}
-    return [s for s in sources if (s["document_id"], s["generation"]) in allowed]
+    selected = None if document_ids is None else set(map(str, document_ids))
+    return [s for s in sources if (s["document_id"], s["generation"]) in allowed
+            and (selected is None or str(s["document_id"]) in selected)]
 
 
-def ready_generations(user_id: str) -> list[str]:
+def ready_generations(user_id: str, document_ids=None) -> list[str]:
     with transaction() as connection:
-        rows = connection.execute("SELECT active_generation FROM knowledge_documents WHERE user_id=%s AND status='ready'", (user_id,)).fetchall()
+        rows = connection.execute("SELECT active_generation FROM knowledge_documents WHERE user_id=%s AND status='ready'"
+                                  + (" AND id=ANY(%s::uuid[])" if document_ids is not None else ""),
+                                  (user_id, document_ids) if document_ids is not None else (user_id,)).fetchall()
     return [str(row["active_generation"]) for row in rows]

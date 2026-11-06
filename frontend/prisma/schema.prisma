@@ -37,7 +37,9 @@ model KnowledgeDocument {
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
   jobs             KnowledgeJob[]
+  agents           AiAgentDocument[]
 
+  @@unique([id, userId], map: "knowledge_documents_id_user_key")
   @@index([userId, createdAt(sort: Desc)], map: "knowledge_documents_user_created_idx")
   @@index([status, createdAt], map: "knowledge_documents_status_created_idx")
   @@map("knowledge_documents")
@@ -61,5 +63,37 @@ model KnowledgeJob {
   @@unique([documentId, operation, generation], map: "knowledge_jobs_document_operation_generation_key")
   @@index([status, runAfter], map: "knowledge_jobs_status_run_after_idx")
   @@map("knowledge_jobs")
+  @@schema("public")
+}
+
+model AiAgent {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Text
+  name          String   @db.Text
+  modelId       String   @map("model_id") @db.Text
+  instructions  String   @db.Text
+  authority     Json     @db.JsonB
+  knowledgeMode String   @default("all") @map("knowledge_mode") @db.Text
+  version       Int      @default(1)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  documents     AiAgentDocument[]
+
+  @@unique([id, userId], map: "ai_agents_id_user_key")
+  @@index([userId, updatedAt(sort: Desc)], map: "ai_agents_user_updated_idx")
+  @@map("ai_agents")
+  @@schema("public")
+}
+
+model AiAgentDocument {
+  agentId    String @map("agent_id") @db.Uuid
+  documentId String @map("document_id") @db.Uuid
+  userId     String @map("user_id") @db.Text
+  agent      AiAgent @relation(fields: [agentId, userId], references: [id, userId], onDelete: Cascade, onUpdate: NoAction)
+  document   KnowledgeDocument @relation(fields: [documentId, userId], references: [id, userId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([agentId, documentId])
+  @@index([documentId, userId], map: "ai_agent_documents_document_user_idx")
+  @@map("ai_agent_documents")
   @@schema("public")
 }

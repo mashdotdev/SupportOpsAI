@@ -54,16 +54,18 @@ def remove(user_id, document_id, generation=None):
                     points_selector=models.FilterSelector(filter=scope(user_id, document_id, generation)), wait=True)
 
 
-def search(user_id, query):
+def search(user_id, query, document_ids=None):
     started = time.monotonic()
-    generations = ready_generations(user_id)
+    generations = ready_generations(user_id) if document_ids is None else ready_generations(user_id, document_ids)
     if not generations:
         return []
     query_filter = scope(user_id)
     query_filter.must.append(models.FieldCondition(key="generation", match=models.MatchAny(any=generations)))
+    if document_ids is not None:
+        query_filter.must.append(models.FieldCondition(key="document_id", match=models.MatchAny(any=list(map(str, document_ids)))))
     hits = client().query_points(settings().qdrant_collection, query=embedder().query(query),
                                  query_filter=query_filter, limit=8, with_payload=True).points
     candidates = [hit.payload for hit in hits if hit.payload]
-    result = valid_sources(user_id, candidates)[:8]
+    result = (valid_sources(user_id, candidates) if document_ids is None else valid_sources(user_id, candidates, document_ids))[:8]
     log.info("retrieval duration_ms=%d hits=%d", (time.monotonic() - started) * 1000, len(result))
     return result

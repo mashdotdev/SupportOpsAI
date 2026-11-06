@@ -11,7 +11,7 @@ export async function ragProxy(request: Request, path: string) {
   if (!token) return Response.json({ error: "Configure BACKEND_API_TOKEN on the frontend server." }, { status: 503 });
   try {
     let body: Uint8Array | undefined;
-    if (request.method === "POST") {
+    if (["POST", "PUT", "PATCH"].includes(request.method)) {
       const reader = request.body?.getReader();
       const parts: Uint8Array[] = [];
       let length = 0;

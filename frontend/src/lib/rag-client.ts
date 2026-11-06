@@ -24,7 +24,8 @@ export async function jsonResponse<T>(response: Response): Promise<T> {
   const body = await response.json();
   if (!response.ok) {
     const detail = body.error || body.detail;
-    throw new Error(typeof detail === "string" ? detail : "The request failed. Please try again.");
+    const message = Array.isArray(detail) ? detail.map((item) => `${item.loc?.filter((part: string) => part !== "body").join(".") || "Input"}: ${item.msg}`).join("; ") : detail;
+    throw new Error(typeof message === "string" ? message : "The request failed. Please try again.");
   }
   return body as T;
 }
