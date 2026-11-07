@@ -37,16 +37,17 @@ bun run db:validate
 bun run db:migrate
 ```
 
-Run migrations against an isolated branch first. The migration adds knowledge
-documents and jobs, preserving tickets and managed Auth tables. SQL CHECK
+Run migrations against an isolated branch first. The migrations add knowledge
+documents, jobs, AI agents, and conversation activity, preserving tickets and managed Auth tables. SQL CHECK
 constraints on size/status/counts must remain in migration SQL because Prisma
 does not represent them. Use pooled URLs for runtime and direct URLs for migrations.
 
 ## Run locally
 
-From `backend/`:
+From the repository root, enter `backend/` before running the API:
 
 ```sh
+cd backend
 uv sync --locked
 uv run python -m supportops.package_model
 uv run python -m supportops.configure_storage
@@ -54,6 +55,10 @@ uv run uvicorn main:app --reload --port 8000 --no-access-log
 # Another terminal, also in backend/:
 uv run python -m supportops.worker
 ```
+
+If an endpoint reports a missing relation such as `ai_agents` or `agent_conversations`, apply the pending
+Prisma migrations with `bun run db:migrate` from `frontend/`, then retry the request.
+The frontend migration URL and backend `DATABASE_URL` must target the same database.
 
 Run `bun run dev` in `frontend/`. Visit `/workspace/knowledge-base`, upload a policy,
 wait for Ready, then open `/workspace/playground`. Document uploads go directly
@@ -80,9 +85,40 @@ query text is bounded to leave room for model instructions and special tokens.
   uploads and obsolete generations; bucket lifecycle rules are not relied on.
 - Use a unique `QDRANT_COLLECTION` per Neon branch. Neon branching does **not** branch
   Qdrant. Changing embedding models/revisions requires a new collection and reindexing.
-- Chat has no saved sessions or messages. The browser sends bounded completed turns.
+- Chat saves conversations and response attempts as **test activity**. The browser
+  still sends bounded completed turns for model context; clearing the visible chat
+  starts a new saved conversation, and does not delete its history.
   Source IDs are validated against owned, ready documents before final answers.
   Citation identity checks do not prove semantic entailment; use the grounding evals.
+
+## Overview and conversation activity
+
+`/workspace` displays owner-scoped conversation metrics, current outcomes, a daily
+volume chart, agent comparisons, and searchable, paginated history. Playground and
+saved-agent chats are always marked `test` by the backend. The default `live` view
+stays empty until a trusted customer channel is implemented; clients cannot turn
+test requests into live activity.
+
+Answers are not automatically counted as resolutions. A workspace owner explicitly
+marks a conversation resolved or reopens it from the detail panel. Escalation means
+human assistance is recommended; it does not perform a handoff. Failed/cancelled
+attempts remain visible, while successful response timings exclude them. Agent
+names, model IDs, and versions are retained even if an agent is renamed or deleted.
+
+Periods include conversations started on the selected local calendar dates. Search
+and outcome filters apply to the conversation table; the cards and chart keep the
+selected period, agent, and source. Answered/clarification conversations become
+inactive after 24 hours; human-attention and confirmed-resolution states persist.
+Running attempts abandoned for three minutes are recorded as interrupted failures.
+
+`GET /v1/overview/events` provides authenticated SSE invalidations by polling durable
+activity revisions every two seconds, without holding database connections open.
+Streams reconnect after 95 seconds; the page also refreshes every 15 seconds while
+visible to recover missed notifications and refresh time-based outcomes.
+
+Verify with `bun run test:overview` in `frontend/` and, in `backend/`,
+`uv run python -m unittest tests.test_activity`. Set `TEST_DATABASE_URL` to a migrated
+**isolated** database to enable the database integration tests.
 
 ## Deployment
 

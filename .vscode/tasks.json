@@ -13,6 +13,25 @@
 			],
 			"isBackground": true,
 			"problemMatcher": []
+		},
+		{
+			"label": "Backend development",
+			"type": "shell",
+			"command": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+			"options": {
+				"cwd": "${workspaceFolder}/backend"
+			},
+			"args": [
+				"-m",
+				"uvicorn",
+				"main:app",
+				"--reload",
+				"--port",
+				"8000",
+				"--no-access-log"
+			],
+			"isBackground": true,
+			"problemMatcher": []
 		}
 	]
 }

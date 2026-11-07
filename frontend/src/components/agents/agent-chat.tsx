@@ -27,6 +27,7 @@ export function AgentChat({ agent, embedded = false }: { agent?: SavedAgent; emb
   const [source, setSource] = useState<Citation | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<AbortController | null>(null);
+  const sessionRef = useRef<{ id: string; key: string } | null>(null);
 
   useEffect(() => {
     const element = conversationRef.current;
@@ -48,6 +49,10 @@ export function AgentChat({ agent, embedded = false }: { agent?: SavedAgent; emb
     setStatus("Preparing your answer…");
     let finished = false;
     try {
+      const key = agent ? `${agent.id}:${agent.version}` : "playground";
+      if (!sessionRef.current || sessionRef.current.key !== key) {
+        sessionRef.current = { id: crypto.randomUUID(), key };
+      }
       // Only complete turns are eligible for conversation context. Keep whole pairs.
       const recent: { role: "user" | "assistant"; content: string }[] = [];
       let characters = question.length;
@@ -61,7 +66,7 @@ export function AgentChat({ agent, embedded = false }: { agent?: SavedAgent; emb
       }
       const response = await fetch(agent ? `/api/agents/${agent.id}/chat` : "/api/playground/chat", {
         method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal,
-        body: JSON.stringify({ messages: [...recent, { role: "user", content: question }], ...(agent ? { version: agent.version } : {}) }),
+        body: JSON.stringify({ conversation_id: sessionRef.current.id, request_id: crypto.randomUUID(), messages: [...recent, { role: "user", content: question }], ...(agent ? { version: agent.version } : {}) }),
       });
       if (!response.ok) await jsonResponse(response);
       if (!response.body) throw new Error("The server did not return a response stream.");
@@ -108,9 +113,9 @@ export function AgentChat({ agent, embedded = false }: { agent?: SavedAgent; emb
       <div className="shrink-0 pb-4 pt-2 sm:pb-6 sm:pt-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-medium">{agent ? agent.name : "Knowledge base chat"}</h2>
-          <Button variant="ghost" isDisabled={running || !messages.length} onPress={() => { setMessages([]); setError(""); setSource(null); }}><Trash2 /> Clear chat</Button>
+          <Button variant="ghost" isDisabled={running || !messages.length} onPress={() => { sessionRef.current = null; setMessages([]); setError(""); setSource(null); }}><Trash2 /> Clear chat</Button>
         </div>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{agent ? `Testing saved version ${agent.version}. ` : ""}This temporary chat clears when you refresh or switch agents.</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{agent ? `Testing saved version ${agent.version}. ` : ""}Conversations are saved as test activity in Overview. Clearing chat starts a new conversation.</p>
       </div>
       <div ref={conversationRef} role="log" aria-label="Chat messages" aria-live="polite" aria-busy={running} className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain py-4 pr-2 sm:gap-8">
         {messages.length === 0 && <div className="m-auto max-w-md text-center">

@@ -97,3 +97,60 @@ model AiAgentDocument {
   @@map("ai_agent_documents")
   @@schema("public")
 }
+
+model AgentConversation {
+  id           String   @id @db.Uuid
+  userId       String   @map("user_id") @db.Text
+  source       String   @db.Text
+  agentId      String?  @map("agent_id") @db.Uuid
+  agentName    String   @map("agent_name") @db.Text
+  agentVersion Int?     @map("agent_version")
+  modelId      String   @map("model_id") @db.Text
+  subject      String   @db.Text
+  status       String   @default("in_progress") @db.Text
+  reason       String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  turns        AgentTurn[]
+  events       AgentActivityEvent[]
+
+  @@unique([id, userId])
+  @@index([userId, source, createdAt(sort: Desc)], map: "agent_conversations_owner_created_idx")
+  @@index([userId, updatedAt(sort: Desc)], map: "agent_conversations_owner_updated_idx")
+  @@map("agent_conversations")
+  @@schema("public")
+}
+
+model AgentTurn {
+  id             String   @id @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  userId         String   @map("user_id") @db.Text
+  question       String   @db.Text
+  answer         String?  @db.Text
+  citations      Json     @default("[]") @db.JsonB
+  responseType   String?  @map("response_type") @db.Text
+  status         String   @default("running") @db.Text
+  error          String?  @db.Text
+  durationMs     Int?     @map("duration_ms")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(6)
+  conversation   AgentConversation @relation(fields: [conversationId, userId], references: [id, userId], onDelete: Cascade)
+
+  // The single-running-turn partial unique index is maintained in migration SQL.
+  @@index([conversationId, createdAt, id], map: "agent_turns_conversation_created_idx")
+  @@map("agent_turns")
+  @@schema("public")
+}
+
+model AgentActivityEvent {
+  id             BigInt   @id @default(autoincrement())
+  conversationId String   @map("conversation_id") @db.Uuid
+  userId         String   @map("user_id") @db.Text
+  kind           String   @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  conversation   AgentConversation @relation(fields: [conversationId, userId], references: [id, userId], onDelete: Cascade)
+
+  @@index([userId, id], map: "agent_activity_events_owner_id_idx")
+  @@map("agent_activity_events")
+  @@schema("public")
+}

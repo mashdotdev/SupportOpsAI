@@ -9,11 +9,13 @@ from supportops.db import transaction
 from supportops.documents import router as document_router
 from supportops.chat import router as chat_router
 from supportops.agent_routes import router as agent_router
+from supportops.overview_routes import router as overview_router
 
 app = FastAPI(title="SupportOps AI Backend", version="1.0.0")
 app.include_router(document_router)
 app.include_router(chat_router)
 app.include_router(agent_router)
+app.include_router(overview_router)
 log = logging.getLogger("supportops.api")
 
 
@@ -55,6 +57,8 @@ def ready():
     settings().require("database_url", "backend_api_token", "openrouter_api_key", "qdrant_url")
     with transaction() as connection:
         connection.execute("SELECT id FROM knowledge_documents LIMIT 0")
+        connection.execute("SELECT id FROM ai_agents LIMIT 0")
+        connection.execute("SELECT id FROM agent_conversations LIMIT 0")
     client().head_bucket(Bucket=settings().storage_bucket)
     ensure_collection()
     embedder()

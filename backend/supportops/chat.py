@@ -4,7 +4,7 @@ import json
 import logging
 import re
 import time
-from uuid import uuid4
+from uuid import UUID, uuid4
 from typing import Literal
 
 from agents import Agent, ModelSettings, OpenAIChatCompletionsModel, RunConfig, Runner, function_tool, set_tracing_disabled
@@ -20,7 +20,7 @@ from .db import ready_generations, valid_sources
 from .documents import User
 from .public_text import PublicText
 from . import vectors
-from . import agent_models, agent_store
+from . import agent_models, agent_store, activity
 
 set_tracing_disabled(True)
 router = APIRouter(prefix="/v1/playground", tags=["playground"])
@@ -37,6 +37,8 @@ class ChatMessage(BaseModel):
 
 class ChatInput(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=21)
+    conversation_id: UUID = Field(default_factory=uuid4)
+    request_id: UUID = Field(default_factory=uuid4)
 
     @model_validator(mode="after")
     def validate_messages(self):
@@ -160,7 +162,7 @@ async def answer(body, user_id, queue, configured_agent=None):
         # Empty/processing knowledge bases are an expected state. Do not spend a
         # model request or initialize vector services just to explain that state.
         if not configured_agent and not await asyncio.to_thread(ready_generations, user_id):
-            await queue.put(event("done", {"id": str(uuid4()), "text": NO_KNOWLEDGE, "citations": []}))
+            await queue.put(event("done", {"id": str(uuid4()), "text": NO_KNOWLEDGE, "citations": [], "response_type": "insufficient_knowledge"}))
             return
         if configured_agent:
             settings().require("openrouter_api_key")
@@ -244,6 +246,8 @@ async def answer(body, user_id, queue, configured_agent=None):
                 await queue.put(event("text_delta", {"delta": text}))
             else:
                 text, citations = finalize(text, sources)
+                if not citations:
+                    kind = "insufficient_knowledge"
             await queue.put(event("done", {"id": str(uuid4()), "text": text, "citations": citations,
                                            "response_type": kind}))
     except asyncio.CancelledError:
@@ -264,20 +268,35 @@ async def answer(body, user_id, queue, configured_agent=None):
 
 @router.post("/chat")
 async def chat(body: ChatInput, user_id: User, request: Request):
-    return stream_response(body, user_id, request)
+    return await tracked_response(body, user_id, request)
 
 
-def stream_response(body: ChatInput, user_id: str, request: Request, configured_agent=None):
+async def tracked_response(body, user_id, request, configured_agent=None):
+    previous = await asyncio.to_thread(activity.start_turn, body, user_id, configured_agent)
+    if previous:
+        async def replay():
+            yield event('done', {'id': previous['id'], 'text': previous['answer'],
+                                'citations': previous['citations'], 'response_type': previous['response_type']})
+        return StreamingResponse(replay(), media_type='text/event-stream')
+    return stream_response(body, user_id, request, configured_agent, tracking=True)
+
+
+def stream_response(body: ChatInput, user_id: str, request: Request, configured_agent=None, tracking=False):
     async def generate():
         queue = asyncio.Queue(maxsize=100)
         task = asyncio.create_task(answer(body, user_id, queue, configured_agent))
         started = time.monotonic()
-        yield event("status", {"message": "Preparing your answer…"})
+        finalized = False
         try:
+            yield event("status", {"message": "Preparing your answer…"})
             while True:
                 if await request.is_disconnected():
                     break
                 if time.monotonic() - started > 110:
+                    if tracking:
+                        await asyncio.to_thread(activity.finish_turn, body.conversation_id, body.request_id, user_id,
+                                                error='The answer timed out. Please retry.')
+                    finalized = True
                     yield event("error", {"error": "The answer timed out. Please retry."})
                     break
                 try:
@@ -287,6 +306,13 @@ def stream_response(body: ChatInput, user_id: str, request: Request, configured_
                     continue
                 if item is None:
                     break
+                if tracking and item.startswith(('event: done\n', 'event: error\n')):
+                    payload = json.loads(item.split('data: ', 1)[1])
+                    await asyncio.to_thread(activity.finish_turn, body.conversation_id, body.request_id, user_id,
+                        **({'error': payload['error']} if 'error' in payload else {
+                            'text': payload['text'], 'citations': payload['citations'],
+                            'response_type': payload.get('response_type', 'answer')}))
+                    finalized = True
                 yield item
                 if item.startswith(("event: done\n", "event: error\n")):
                     break
@@ -296,5 +322,13 @@ def stream_response(body: ChatInput, user_id: str, request: Request, configured_
                 await task
             except asyncio.CancelledError:
                 pass
+            if tracking and not finalized:
+                # Shield persistence from the streaming request's cancellation scope.
+                cleanup = asyncio.create_task(asyncio.to_thread(activity.finish_turn,
+                    body.conversation_id, body.request_id, user_id, cancelled=True))
+                try:
+                    await asyncio.shield(cleanup)
+                except asyncio.CancelledError:
+                    pass
     return StreamingResponse(generate(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache, no-store", "X-Accel-Buffering": "no"})

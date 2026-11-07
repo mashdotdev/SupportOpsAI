@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import Field
 
 from . import agent_models, agent_store
-from .chat import ChatInput, stream_response
+from .chat import ChatInput, tracked_response
 from .db import transaction
 from .documents import User
 
@@ -73,4 +73,4 @@ async def chat(agent_id: UUID, body: AgentChatInput, user_id: User, request: Req
     agent = await asyncio.to_thread(agent_store.get_agent, agent_id, user_id)
     if body.version != agent["version"]:
         raise HTTPException(409, "This agent has changed. Reload its saved configuration and start a fresh conversation.")
-    return stream_response(body, user_id, request, agent)
+    return await tracked_response(body, user_id, request, agent)
