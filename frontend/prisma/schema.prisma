@@ -78,6 +78,8 @@ model AiAgent {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
   documents     AiAgentDocument[]
+  slackNotifications Boolean @default(false) @map("slack_notifications")
+  slackTestDelivery Boolean @default(false) @map("slack_test_delivery")
 
   @@unique([id, userId], map: "ai_agents_id_user_key")
   @@index([userId, updatedAt(sort: Desc)], map: "ai_agents_user_updated_idx")
@@ -113,6 +115,8 @@ model AgentConversation {
   updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
   turns        AgentTurn[]
   events       AgentActivityEvent[]
+  escalationCycle Int @default(1) @map("escalation_cycle")
+  notifications NotificationJob[]
 
   @@unique([id, userId])
   @@index([userId, source, createdAt(sort: Desc)], map: "agent_conversations_owner_created_idx")
@@ -152,5 +156,74 @@ model AgentActivityEvent {
 
   @@index([userId, id], map: "agent_activity_events_owner_id_idx")
   @@map("agent_activity_events")
+  @@schema("public")
+}
+
+model SlackConnection {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @unique @map("user_id") @db.Text
+  name String @db.Text
+  destination String @db.Text
+  secret String? @db.Text
+  enabled Boolean @default(true)
+  version Int @default(1)
+  verifiedAt DateTime? @map("verified_at") @db.Timestamptz(6)
+  lastSentAt DateTime? @map("last_sent_at") @db.Timestamptz(6)
+  lastError String? @map("last_error") @db.Text
+  nextSendAt DateTime @default(now()) @map("next_send_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  jobs NotificationJob[]
+  @@unique([id,userId])
+  @@map("slack_connections")
+  @@schema("public")
+}
+
+model NotificationJob {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @map("user_id") @db.Text
+  connectionId String @map("connection_id") @db.Uuid
+  connectionVersion Int @map("connection_version")
+  conversationId String? @map("conversation_id") @db.Uuid
+  agentId String? @map("agent_id") @db.Uuid
+  agentName String @map("agent_name") @db.Text
+  cycle Int @default(1)
+  kind String @db.Text
+  mode String @db.Text
+  source String @db.Text
+  status String @db.Text
+  question String @db.Text
+  reason String @db.Text
+  attempts Int @default(0)
+  maxAttempts Int @default(3) @map("max_attempts")
+  explicitDelivery Boolean @default(false) @map("explicit_delivery")
+  runAfter DateTime @default(now()) @map("run_after") @db.Timestamptz(6)
+  leaseUntil DateTime? @map("lease_until") @db.Timestamptz(6)
+  leaseToken String? @map("lease_token") @db.Uuid
+  error String? @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  connection SlackConnection @relation(fields:[connectionId,userId],references:[id,userId])
+  conversation AgentConversation? @relation(fields:[conversationId,userId],references:[id,userId],onDelete:Cascade)
+  deliveries NotificationAttempt[]
+  // Escalation deduplication uses a partial unique index in migration SQL.
+  @@index([status,runAfter], map:"notification_jobs_queue_idx")
+  @@index([userId,createdAt(sort:Desc)], map:"notification_jobs_owner_created_idx")
+  @@map("notification_jobs")
+  @@schema("public")
+}
+
+model NotificationAttempt {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jobId String @map("job_id") @db.Uuid
+  number Int
+  status String @db.Text
+  httpStatus Int? @map("http_status")
+  error String? @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  job NotificationJob @relation(fields:[jobId],references:[id],onDelete:Cascade)
+  @@unique([jobId,number])
+  @@map("notification_attempts")
   @@schema("public")
 }

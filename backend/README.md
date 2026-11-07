@@ -171,15 +171,82 @@ and image prices at zero, and send no model fallback list. Catalog eligibility
 does not guarantee endpoint capacity; errors remain visible and retries are
 user initiated. See [OpenRouter provider routing](https://openrouter.ai/docs/guides/routing/provider-selection).
 
-Only the knowledge search tool is available. Authority guides model responses;
-it does not grant actions. Escalation returns the owner's configured message and
-does not create tickets, notify staff, or transfer conversations. Greeting and
+Knowledge search is available to agents. Authority guides model responses;
+it does not grant actions. The structured Notify support team permission can
+queue Slack notifications for explicit escalations; it does not create tickets
+or transfer conversations. Greeting and
 clarification markers are replaced with application text. Knowledge answers must
 pass citation identity checks; ungrounded answers fall back to escalation.
 Custom-agent text is held until final scope/citation validation before it enters
 the SSE response. Status events and heartbeats remain streamed throughout.
 As with the playground, citation identity checks do not establish semantic
 entailment or guarantee model compliance with every behavior preference.
+
+## Slack notifications
+
+Deploy Prisma migration `202611070002_slack_notifications` using the same direct
+database migration workflow. Test it on the isolated validation branch first.
+
+Set `INTEGRATION_ENCRYPTION_KEY` in the backend environment. Generate it once:
+
+```sh
+uv run python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+Store this key as a deployment secret; use the same value in the API and worker.
+Keep it stable: replacing it makes existing encrypted webhooks unreadable, and
+those connections must be reconfigured. Webhooks never enter model context or
+public responses. Only exact `https://hooks.slack.com/services/...` URLs are
+accepted. The connector does not follow redirects or use ambient HTTP proxies.
+
+Set `FRONTEND_ORIGIN` to the application's external origin so Slack conversation
+links are usable by the team. Localhost links work only on the development computer.
+Receiving a Slack link does not grant application access; the current MVP remains
+owner-scoped. Team membership is a separate feature.
+
+Run the separate delivery worker alongside the API:
+
+```sh
+uv run python -m supportops.notification_worker
+```
+
+VS Code includes a **Slack notification worker** task. Docker Compose includes
+the `notification-worker` service. An idle worker checks the queue every two
+seconds. Deploy it as a persistent process, not a request-scoped background task.
+
+In Tools & Integrations, save the connection name, channel label and Slack incoming
+webhook. The label is descriptive; the webhook selects the actual channel. Saving
+never sends a message. **Send test notification** explicitly queues a TEST message.
+Enable **Notify support team** on selected agents. Tests simulate delivery by
+default; enabling real test delivery or choosing **Send TEST to Slack** posts a
+message. Only validated `escalation` outcomes automatically queue notifications.
+Out-of-scope responses, clarification and technical failures do not automatically
+notify. With notification permission enabled, escalation replies use standard
+application text that cannot claim delivery before confirmation.
+
+Escalation results and the outbox commit together. Deduplication allows one
+notification per conversation escalation cycle and mode (simulation/delivery).
+Only reopening a resolved conversation starts a new cycle. Pending sends recheck
+agent permission, connection version and conversation state. Disabling,
+replacing or disconnecting Slack cancels pending jobs; a bounded in-flight request
+finishes before settings changes acquire the connection lock. Delivery is limited
+to one request per second per connection. Connection failures and HTTP 429 retry
+at most three attempts, honoring Retry-After. Read/write timeouts, server errors,
+and expired sending leases become **Delivery unknown** and are not automatically
+retried because Slack webhooks do not provide exactly-once delivery guarantees.
+Check Slack for unknown deliveries. Definite failed/cancelled deliveries can be
+retried explicitly from the conversation using the notify/send-test action.
+
+Slack acceptance records **Sent**; conversations stay **Needs attention** until
+explicitly resolved. Disconnected connections retain audit history but delete
+their encrypted credential. Playground simulations show previews and never contact
+Slack. The message contains only a bounded problem excerpt, generic escalation
+reason, agent/environment and an authenticated conversation link.
+
+Run `uv run python -m unittest tests.test_notifications -v` with an isolated,
+migrated `TEST_DATABASE_URL` and no notification worker for database tests. All
+Slack HTTP calls are fixtures; tests never post to Slack. Frontend transport tests:
+`bun run test:integrations` from the frontend directory.
 
 Prisma migration `202611060001_ai_agents` must be deployed to the database used
 by the backend before agent APIs are enabled. First validate on an isolated

@@ -21,7 +21,7 @@ def emit(connection, conversation_id, user_id, kind):
 
 def owned(connection, conversation_id, user_id, lock=False):
     row = connection.execute("SELECT * FROM agent_conversations WHERE id=%s AND user_id=%s" +
-                             (" FOR UPDATE" if lock else ""), (conversation_id, user_id)).fetchone()
+                             (" FOR NO KEY UPDATE" if lock else ""), (conversation_id, user_id)).fetchone()
     if not row:
         raise HTTPException(404, 'Conversation not found.')
     return row
@@ -84,7 +84,7 @@ def outcome(response_type):
 def finish_turn(conversation_id, turn_id, user_id, *, text=None, citations=None,
                 response_type=None, error=None, cancelled=False):
     with transaction() as connection:
-        owned(connection, conversation_id, user_id, lock=True)
+        conversation = owned(connection, conversation_id, user_id, lock=True)
         status = 'cancelled' if cancelled else 'failed' if error else 'completed'
         changed = connection.execute("""UPDATE agent_turns SET answer=%s,citations=%s,response_type=%s,
             status=%s,error=%s,completed_at=now(),duration_ms=GREATEST(0,(EXTRACT(EPOCH FROM now()-created_at)*1000)::integer)
@@ -96,6 +96,10 @@ def finish_turn(conversation_id, turn_id, user_id, *, text=None, citations=None,
         connection.execute('UPDATE agent_conversations SET status=%s,reason=%s,updated_at=now() WHERE id=%s AND user_id=%s',
                            (state, reason, conversation_id, user_id))
         emit(connection, conversation_id, user_id, status)
+        if status == 'completed' and response_type == 'escalation':
+            from .notifications import enqueue_escalation
+            question = connection.execute('SELECT question FROM agent_turns WHERE id=%s', (turn_id,)).fetchone()['question']
+            enqueue_escalation(connection, conversation, question)
 
 
 def expire_stalled(connection, user_id):
@@ -151,6 +155,8 @@ def snapshot(user_id, source='live', days=7, agent_id=None, search='', status=No
         direction = 'DESC' if order == 'latest' else 'ASC'
         conversations = connection.execute(f"""SELECT c.id,c.agent_id,c.agent_name,c.subject,
             {EFFECTIVE_STATUS} AS status,c.reason,c.updated_at,c.created_at,
+            (SELECT j.status FROM notification_jobs j WHERE j.conversation_id=c.id AND j.cycle=c.escalation_cycle
+             ORDER BY (j.mode='delivery') DESC,j.created_at DESC LIMIT 1) AS notification_status,
             (SELECT count(*)::integer FROM agent_turns t WHERE t.conversation_id=c.id AND t.status='failed') AS failed_responses
             FROM agent_conversations c WHERE {table_where} ORDER BY c.updated_at {direction},c.id {direction} LIMIT 20 OFFSET %s""",
             [*table_params, (page-1)*20]).fetchall()
@@ -187,7 +193,15 @@ def detail(conversation_id, user_id):
                                    (conversation_id, user_id)).fetchall()
         events = connection.execute('SELECT kind,created_at FROM agent_activity_events WHERE conversation_id=%s AND user_id=%s ORDER BY id',
                                     (conversation_id, user_id)).fetchall()
-    return {'conversation': serialize(conversation), 'turns': list(map(serialize, turns)), 'events': list(map(serialize, events))}
+        from .notifications import PUBLIC_JOB, preview
+        jobs = connection.execute(f'SELECT {PUBLIC_JOB} FROM notification_jobs WHERE conversation_id=%s AND user_id=%s ORDER BY created_at DESC,id DESC',
+                                  (conversation_id, user_id)).fetchall()
+        destination = connection.execute('SELECT name,destination,enabled,secret IS NOT NULL AS connected FROM slack_connections WHERE user_id=%s', (user_id,)).fetchone()
+        agent = connection.execute('SELECT slack_notifications FROM ai_agents WHERE id=%s AND user_id=%s', (conversation['agent_id'], user_id)).fetchone()
+    return {'conversation': serialize(conversation), 'turns': list(map(serialize, turns)), 'events': list(map(serialize, events)),
+            'notifications': [{**serialize(job), 'preview': preview(job)} for job in jobs],
+            'can_notify': bool(agent and agent['slack_notifications'] and destination and destination['enabled'] and destination['connected']),
+            'slack_destination': destination['destination'] if destination else None}
 
 
 def set_resolution(conversation_id, user_id, resolved):
@@ -198,6 +212,8 @@ def set_resolution(conversation_id, user_id, resolved):
             raise HTTPException(409, 'Wait for the current answer to finish.')
         state = 'resolved' if resolved else 'needs_attention'
         if conversation['status'] != state:
+            if not resolved and conversation['status'] == 'resolved':
+                connection.execute('UPDATE agent_conversations SET escalation_cycle=escalation_cycle+1 WHERE id=%s', (conversation_id,))
             connection.execute('UPDATE agent_conversations SET status=%s,reason=%s,updated_at=now() WHERE id=%s AND user_id=%s',
                 (state, 'Resolution confirmed by workspace owner' if resolved else 'Reopened by workspace owner', conversation_id, user_id))
             emit(connection, conversation_id, user_id, 'resolved_by_owner' if resolved else 'reopened_by_owner')

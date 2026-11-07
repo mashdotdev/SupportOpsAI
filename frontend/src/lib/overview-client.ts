@@ -1,4 +1,8 @@
 import type { Citation } from "@/lib/rag-client";
+import type {
+  DeliveryStatus,
+  NotificationJob,
+} from "@/lib/integrations-client";
 
 export const outcomeLabels = {
   in_progress: "In progress",
@@ -19,6 +23,7 @@ export type Conversation = {
   created_at: string;
   updated_at: string;
   failed_responses: number;
+  notification_status?: DeliveryStatus | null;
 };
 export type Overview = {
   metrics: {
@@ -51,6 +56,7 @@ export type ConversationDetail = {
     model_id: string;
     agent_version: number | null;
     source: "test" | "live";
+    escalation_cycle: number;
   };
   turns: {
     id: string;
@@ -65,6 +71,9 @@ export type ConversationDetail = {
     completed_at: string | null;
   }[];
   events: { kind: string; created_at: string }[];
+  notifications: NotificationJob[];
+  can_notify: boolean;
+  slack_destination: string | null;
 };
 
 export function responseTime(ms: number | null) {

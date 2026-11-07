@@ -137,6 +137,11 @@ def configured_instructions(agent):
 
 
 def finalize_configured(text, sources, agent):
+    escalation_text = (
+        'A member of the support team needs to help with this. '
+        'This conversation needs human attention; Slack notification delivery is not yet confirmed.'
+        if agent.get('slack_notifications') else agent['authority']['escalation_message']
+    )
     kind = {"[[GREETING]]": "greeting", "[[CLARIFY]]": "clarification",
             "[[OUT_OF_SCOPE]]": "out_of_scope", "[[ESCALATE]]": "escalation"}.get(text.strip())
     if kind == "greeting":
@@ -144,12 +149,12 @@ def finalize_configured(text, sources, agent):
     if kind == "clarification":
         return "Could you share a little more detail about what you need help with?", [], kind
     if kind:
-        return agent["authority"]["escalation_message"], [], kind
+        return escalation_text, [], kind
     if re.search(r"\[\[(?:GREETING|CLARIFY|OUT_OF_SCOPE|ESCALATE)\]\]", text):
-        return agent["authority"]["escalation_message"], [], "escalation"
+        return escalation_text, [], "escalation"
     text, citations = finalize(text, sources)
     if not citations:
-        return agent["authority"]["escalation_message"], [], "escalation"
+        return escalation_text, [], "escalation"
     return text, citations, "answer"
 
 

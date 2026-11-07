@@ -3,6 +3,8 @@ import time
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 
 from supportops.config import settings
 from supportops.db import transaction
@@ -10,13 +12,25 @@ from supportops.documents import router as document_router
 from supportops.chat import router as chat_router
 from supportops.agent_routes import router as agent_router
 from supportops.overview_routes import router as overview_router
+from supportops.integration_routes import router as integration_router
 
 app = FastAPI(title="SupportOps AI Backend", version="1.0.0")
 app.include_router(document_router)
 app.include_router(chat_router)
 app.include_router(agent_router)
 app.include_router(overview_router)
+app.include_router(integration_router)
 log = logging.getLogger("supportops.api")
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request: Request, error: RequestValidationError):
+    if request.url.path.startswith('/v1/integrations/'):
+        # Pydantic includes rejected field inputs by default; never echo a webhook credential.
+        return JSONResponse({'error': '; '.join(item['msg'] for item in error.errors())[:500],
+                             'detail': [{'loc': list(item['loc']), 'msg': item['msg'], 'type': item['type']}
+                                        for item in error.errors()]}, status_code=422)
+    return await request_validation_exception_handler(request, error)
 
 
 @app.middleware("http")
@@ -59,6 +73,7 @@ def ready():
         connection.execute("SELECT id FROM knowledge_documents LIMIT 0")
         connection.execute("SELECT id FROM ai_agents LIMIT 0")
         connection.execute("SELECT id FROM agent_conversations LIMIT 0")
+        connection.execute("SELECT id FROM slack_connections LIMIT 0")
     client().head_bucket(Bucket=settings().storage_bucket)
     ensure_collection()
     embedder()

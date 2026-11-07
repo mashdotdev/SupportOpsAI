@@ -20,3 +20,13 @@ services:
     depends_on:
       api:
         condition: service_healthy
+  notification-worker:
+    image: supportops-backend:local
+    env_file: ./backend/.env
+    command: ["python", "-m", "supportops.notification_worker"]
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy

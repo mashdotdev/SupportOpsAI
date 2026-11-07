@@ -26,6 +26,8 @@ class AgentInput(BaseModel):
     authority: Authority
     knowledge_mode: Literal["all", "selected"] = "all"
     document_ids: list[UUID] = Field(default_factory=list, max_length=200)
+    slack_notifications: bool = False
+    slack_test_delivery: bool = False
 
     @field_validator("document_ids")
     @classmethod
@@ -36,6 +38,8 @@ class AgentInput(BaseModel):
     def clear_all_documents(self):
         if self.knowledge_mode == "all":
             self.document_ids = []
+        if not self.slack_notifications:
+            self.slack_test_delivery = False
         return self
 
 
@@ -81,6 +85,10 @@ def save_agent(body, user_id, agent_id=None):
             if previous["version"] != body.version:
                 raise HTTPException(409, "This agent was changed in another session. Reload it before saving again.")
         check_documents(connection, body.document_ids, user_id)
+        if body.slack_notifications:
+            destination = connection.execute('SELECT enabled,secret FROM slack_connections WHERE user_id=%s', (user_id,)).fetchone()
+            if not destination or not destination['enabled'] or not destination['secret']:
+                raise HTTPException(422, 'Connect and enable Slack in Tools & Integrations first.')
         values = (body.name, body.model_id, body.instructions, Jsonb(body.authority.model_dump()), body.knowledge_mode)
         if agent_id:
             connection.execute("""UPDATE ai_agents SET name=%s,model_id=%s,instructions=%s,authority=%s,
@@ -94,6 +102,8 @@ def save_agent(body, user_id, agent_id=None):
         for document_id in body.document_ids:
             connection.execute("INSERT INTO ai_agent_documents (agent_id,document_id,user_id) VALUES (%s,%s,%s)",
                                (agent_id, document_id, user_id))
+        connection.execute('UPDATE ai_agents SET slack_notifications=%s,slack_test_delivery=%s WHERE id=%s AND user_id=%s',
+                           (body.slack_notifications, body.slack_test_delivery, agent_id, user_id))
         return serialize(find(connection, agent_id, user_id))
 
 

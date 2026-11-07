@@ -14,6 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { jsonResponse } from "@/lib/rag-client";
+import { deliveryLabels } from "@/lib/integrations-client";
 import {
   ConversationDetail,
   outcomeLabels,
@@ -81,6 +82,30 @@ export function ConversationPanel({
     }
   }
 
+  async function notify(deliver: boolean) {
+    if (!id) return;
+    setPending(true);
+    try {
+      await fetch(`/api/integrations/conversations/${id}/notify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deliver }),
+      }).then(jsonResponse);
+      const data = await fetch(`/api/overview/conversations/${id}`).then(
+        jsonResponse<ConversationDetail>,
+      );
+      setDetail(data);
+      setError("");
+      onChange();
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Unable to notify support.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
+
   const current =
     loadedId === id && detail?.conversation.id === id ? detail : null;
   return (
@@ -139,8 +164,8 @@ export function ConversationPanel({
               )}
               {current.conversation.status === "needs_attention" && (
                 <p className="text-xs text-muted-foreground">
-                  Human assistance is recommended. No automatic handoff has
-                  taken place.
+                  Human assistance is required. Slack delivery does not confirm
+                  that a human has accepted this conversation.
                 </p>
               )}
               <Button
@@ -224,6 +249,97 @@ export function ConversationPanel({
                       </details>
                     ))}
                   </div>
+                </div>
+              ))}
+            </div>
+            <Separator />
+            <div className="flex flex-col gap-3">
+              <h3 className="text-sm font-medium">Support notifications</h3>
+              {current.can_notify &&
+                current.conversation.status === "needs_attention" && (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      isDisabled={
+                        pending ||
+                        current.notifications.some(
+                          (job) =>
+                            job.cycle ===
+                              current.conversation.escalation_cycle &&
+                            job.mode === "delivery" &&
+                            ["sent", "queued", "sending", "unknown"].includes(
+                              job.status,
+                            ),
+                        )
+                      }
+                      onPress={() =>
+                        void notify(current.conversation.source === "live")
+                      }
+                    >
+                      {current.conversation.source === "test"
+                        ? "Simulate notification"
+                        : "Notify support team"}
+                    </Button>
+                    {current.conversation.source === "test" && (
+                      <Button
+                        variant="outline"
+                        isDisabled={
+                          pending ||
+                          current.notifications.some(
+                            (job) =>
+                              job.cycle ===
+                                current.conversation.escalation_cycle &&
+                              job.mode === "delivery" &&
+                              ["sent", "queued", "sending", "unknown"].includes(
+                                job.status,
+                              ),
+                          )
+                        }
+                        onPress={() => void notify(true)}
+                      >
+                        Send TEST to Slack
+                      </Button>
+                    )}
+                    <p className="w-full text-xs text-muted-foreground">
+                      Destination: {current.slack_destination}. Sending a test
+                      posts the problem excerpt and link to this Slack channel.
+                    </p>
+                  </div>
+                )}
+              {!current.notifications.length && (
+                <p className="text-xs text-muted-foreground">
+                  No Slack notification recorded. Enable the capability on the
+                  agent to notify support.
+                </p>
+              )}
+              {current.notifications.map((job) => (
+                <div
+                  key={job.id}
+                  className="flex flex-col gap-2 rounded-lg border p-3"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">
+                      {deliveryLabels[job.status]}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(job.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  {job.error && <p className="text-xs">{job.error}</p>}
+                  <details>
+                    <summary className="cursor-pointer text-xs">
+                      Notification preview
+                    </summary>
+                    <div className="mt-2 flex flex-col gap-1 text-xs">
+                      <p>
+                        {job.source === "test" ? "TEST · " : ""}
+                        {job.agent_name}
+                      </p>
+                      <p className="wrap-anywhere">Problem: {job.question}</p>
+                      <p>{job.reason}</p>
+                      <p>Open conversation (authenticated application link)</p>
+                    </div>
+                  </details>
                 </div>
               ))}
             </div>

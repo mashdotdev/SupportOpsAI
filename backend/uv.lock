@@ -61,6 +61,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "boto3" },
+    { name = "cryptography" },
     { name = "fastapi", extra = ["standard"] },
     { name = "fastembed" },
     { name = "httpx" },
@@ -77,6 +78,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.40,<2" },
+    { name = "cryptography", specifier = ">=50.0.2,<51" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.162.0" },
     { name = "fastembed", specifier = "==0.9.1" },
     { name = "httpx", specifier = ">=0.28,<1" },

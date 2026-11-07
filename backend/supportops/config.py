@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     aws_region: str = "us-east-2"
     storage_bucket: str = "knowledge-documents"
     frontend_origin: str = "http://localhost:3000"
+    integration_encryption_key: str = ""
     embedding_model_path: str = "data/models/bge-small-en-v1.5"
     max_file_bytes: int = 20 * 1024 * 1024
 

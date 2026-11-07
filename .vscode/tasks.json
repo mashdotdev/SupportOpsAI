@@ -32,6 +32,15 @@
 			],
 			"isBackground": true,
 			"problemMatcher": []
+		},
+		{
+			"label": "Slack notification worker",
+			"type": "shell",
+			"command": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+			"options": { "cwd": "${workspaceFolder}/backend" },
+			"args": ["-m", "supportops.notification_worker"],
+			"isBackground": true,
+			"problemMatcher": []
 		}
 	]
 }

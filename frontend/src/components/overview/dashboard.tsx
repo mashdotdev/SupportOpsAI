@@ -68,6 +68,7 @@ import {
   trendData,
 } from "@/lib/overview-client";
 import { jsonResponse } from "@/lib/rag-client";
+import { deliveryLabels } from "@/lib/integrations-client";
 import { ConversationPanel } from "./conversation-detail";
 
 const chartConfig = {
@@ -144,6 +145,8 @@ function ConversationTable({
             }
           >
             {outcomeLabels[row.original.status]}
+            {row.original.notification_status &&
+              ` · ${deliveryLabels[row.original.notification_status]}`}
           </Badge>
         ),
       },
@@ -258,6 +261,15 @@ export function OverviewDashboard({ email }: { email: string }) {
   const [connected, setConnected] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  useEffect(() => {
+    const conversation = new URLSearchParams(window.location.search).get(
+      "conversation",
+    );
+    if (conversation && /^[0-9a-f-]{36}$/i.test(conversation)) {
+      const timer = setTimeout(() => setSelected(conversation), 0);
+      return () => clearTimeout(timer);
+    }
+  }, []);
   const query = useMemo(
     () =>
       new URLSearchParams({

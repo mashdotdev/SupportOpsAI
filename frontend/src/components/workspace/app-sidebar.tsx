@@ -78,7 +78,7 @@ const navigation: {
   {
     label: "OPERATIONS",
     items: [
-      { label: "Tools & Integrations", icon: Workflow },
+      { label: "Tools & Integrations", icon: Workflow, href: "/workspace/tools-integrations" },
       { label: "Evaluations", icon: ChartNoAxesCombined },
       { label: "Activity & Logs", icon: Activity },
     ],
