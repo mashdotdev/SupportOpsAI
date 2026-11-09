@@ -182,6 +182,30 @@ def snapshot(user_id, source='live', days=7, agent_id=None, search='', status=No
             'generated_at': datetime.now(timezone.utc).isoformat()}
 
 
+def inbox(user_id, source='live', search='', status=None, page=1, widget_only=False):
+    where, params = 'c.user_id=%s AND c.source=%s', [user_id, source]
+    if widget_only:
+        where += ' AND c.widget_revision_id IS NOT NULL'
+    if search:
+        escaped = '%' + search.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_') + '%'
+        where += " AND (c.subject ILIKE %s ESCAPE '\\' OR c.visitor_email ILIKE %s ESCAPE '\\' OR c.visitor_name ILIKE %s ESCAPE '\\')"
+        params += [escaped, escaped, escaped]
+    if status:
+        where += f' AND {EFFECTIVE_STATUS}=%s'
+        params.append(status)
+    with transaction() as connection:
+        expire_stalled(connection, user_id)
+        total = connection.execute(f'SELECT count(*) AS total FROM agent_conversations c WHERE {where}', params).fetchone()['total']
+        page = min(page, max(1, (total + 19) // 20))
+        rows = connection.execute(f'''SELECT c.id,c.agent_id,c.agent_name,c.subject,c.visitor_name,c.visitor_email,
+            c.page_origin,c.created_at,c.updated_at,c.customer_feedback,{EFFECTIVE_STATUS} AS status,
+            (SELECT j.status FROM notification_jobs j WHERE j.conversation_id=c.id AND j.cycle=c.escalation_cycle
+             ORDER BY (j.mode='delivery') DESC,j.created_at DESC LIMIT 1) AS notification_status
+            FROM agent_conversations c WHERE {where} ORDER BY c.updated_at DESC,c.id DESC LIMIT 20 OFFSET %s''',
+            [*params, (page-1)*20]).fetchall()
+    return {'conversations': [serialize(row) for row in rows], 'total': total, 'page': page}
+
+
 def detail(conversation_id, user_id):
     with transaction() as connection:
         expire_stalled(connection, user_id)

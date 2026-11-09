@@ -3,7 +3,73 @@
 FastAPI + OpenAI Agents SDK using **OpenRouter free chat models**, CPU FastEmbed,
 Qdrant Cloud, and private Neon Object Storage. No OpenAI API key is needed.
 
-## Configure
+## Website chatbot widget
+
+Open **Website Widget** in the workspace. Select a saved agent, explicitly approve
+the documents it may use on a public website, add exact HTTPS website origins and
+a privacy-policy URL, then save and publish. Copy the generated script into the
+website before its closing body tag. Add `www` and other subdomains separately.
+HTTP origins are accepted only for localhost development.
+
+The public app URL must be reachable over HTTPS. Keep the FastAPI service behind
+the Next.js server; it authenticates public widget requests with the private
+`BACKEND_API_TOKEN`, and visitors receive separate seven-day credentials scoped to
+one widget, origin, and conversation. A widget ID is public configuration. Never
+put provider keys, service tokens, or an owner session in an embed snippet.
+
+For VS Code public port forwarding, forward only the frontend port (3000).
+Set `WIDGET_PUBLIC_ORIGIN` in frontend `.env.local` to the exact HTTPS tunnel
+origin, without a trailing slash, then restart the frontend if needed. This
+allows browser POSTs when the tunnel rewrites the internal request URL to
+localhost. Update this setting and the embed script URL if the tunnel changes.
+The allowed website origin remains the customer's website, not the tunnel.
+
+Each publication stores an immutable agent configuration. New conversations use
+the latest publication; existing conversations keep their original version.
+Saving an agent does not publish it. Pausing blocks messages immediately. Saving
+a draft that removes an origin or approved document revokes that access immediately;
+document deletion and the current agent's knowledge/Slack permission restrictions
+also take precedence over published snapshots. Changing the agent's document
+selection never grants the widget additional documents automatically.
+
+The iframe does not require third-party login cookies. The small loader keeps an
+opaque visitor credential in the embedding website's localStorage and passes it
+through origin- and source-checked messages. When storage is blocked, chat works
+for the current page session. Conversation text stays on the server. Website CSPs
+must allow the app origin in `script-src` and `frame-src`; our iframe sends a
+per-widget `frame-ancestors` policy. Domain checks restrict browser embedding;
+visitor credentials and rate limits enforce access to public APIs.
+
+The **Conversations** inbox and Overview show website traffic as **Live**. An answer
+is not automatically resolved: the customer must confirm it helped, or the owner
+must mark it resolved. Support requests and validated escalations create durable
+real Slack jobs when the published agent and its current permissions allow them.
+Playground's real-test-delivery switch does not govern website traffic. Keep the
+notification worker running. The widget reports queued/sent/failed/unknown delivery
+accurately. Contact details are optional until the visitor chooses follow-up; they
+appear in the owner-only conversation view. Human replies in the widget and two-way
+Slack are outside this MVP.
+
+Free models remain mandatory, without paid fallbacks. Public requests, session
+creation, concurrent turns, IP/session rates, owner daily messages, and shared
+model usage are limited in Postgres, including across API replicas. The default
+`WIDGET_DAILY_MODEL_REQUESTS=45` conservatively reserves three provider requests per
+turn (up to 15 turns/day across all widgets), even when a turn uses fewer. Set this
+to match the actual OpenRouter account allowance. Playground usage also consumes
+the upstream allowance. The owner message limit resets at midnight UTC.
+
+For per-IP limits in production, set frontend `WIDGET_CLIENT_IP_HEADER` only to a
+header your trusted hosting proxy always replaces, and prevent direct origin
+access that could forge it. If unset, all visitors share a conservative IP bucket.
+Use hosting/network protections as appropriate for a public endpoint. Support
+fallback email and the privacy URL are configured in the widget settings.
+
+Run `bun run test:widgets` in the frontend and
+`uv run python -m unittest tests.test_widgets -v` in the backend. Database tests
+require an isolated, migrated `TEST_DATABASE_URL` with no workers. Model and Slack
+responses in automated tests are fixtures; no Slack messages are sent.
+
+## Backend configuration
 
 Copy `.env.example` to `.env`, preserving existing secrets. Supply an OpenRouter
 key, Qdrant URL/key, and the Neon branch's S3 credentials. `DATABASE_URL` must point

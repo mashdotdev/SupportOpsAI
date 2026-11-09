@@ -24,6 +24,10 @@ export type Conversation = {
   updated_at: string;
   failed_responses: number;
   notification_status?: DeliveryStatus | null;
+  visitor_name?: string | null;
+  visitor_email?: string | null;
+  page_origin?: string | null;
+  customer_feedback?: string | null;
 };
 export type Overview = {
   metrics: {

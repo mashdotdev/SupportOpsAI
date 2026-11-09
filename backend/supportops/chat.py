@@ -136,6 +136,13 @@ def configured_instructions(agent):
     )
 
 
+def document_scope(agent, user_id):
+    if agent.get('_widget_revision_id'):
+        from .widgets import document_scope as published_scope
+        return published_scope(agent, user_id)
+    return agent_store.current_document_scope(agent['id'], user_id, agent['version'])
+
+
 def finalize_configured(text, sources, agent):
     escalation_text = (
         'A member of the support team needs to help with this. '
@@ -184,8 +191,7 @@ async def answer(body, user_id, queue, configured_agent=None):
                 return "Search limit reached. Answer from retrieved evidence or abstain."
             await queue.put(event("status", {"message": "Searching your documents…"}))
             if configured_agent:
-                permitted = await asyncio.to_thread(agent_store.current_document_scope,
-                    configured_agent["id"], user_id, configured_agent["version"])
+                permitted = await asyncio.to_thread(document_scope, configured_agent, user_id)
                 results = await asyncio.to_thread(vectors.search, user_id, query[:4000], permitted)
             else:
                 results = await asyncio.to_thread(vectors.search, user_id, query[:4000])
@@ -234,8 +240,7 @@ async def answer(body, user_id, queue, configured_agent=None):
             if delta and not configured_agent:
                 await queue.put(event("text_delta", {"delta": delta}))
             if configured_agent:
-                permitted = await asyncio.to_thread(agent_store.current_document_scope,
-                    configured_agent["id"], user_id, configured_agent["version"])
+                permitted = await asyncio.to_thread(document_scope, configured_agent, user_id)
                 allowed = await asyncio.to_thread(valid_sources, user_id, list(sources.values()), permitted)
             else:
                 allowed = await asyncio.to_thread(valid_sources, user_id, list(sources.values()))

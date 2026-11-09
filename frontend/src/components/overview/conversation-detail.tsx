@@ -162,6 +162,12 @@ export function ConversationPanel({
               {current.conversation.reason && (
                 <p className="text-sm">{current.conversation.reason}</p>
               )}
+              {current.conversation.page_origin && <p className="wrap-anywhere text-sm">Website: {current.conversation.page_origin}</p>}
+              {(current.conversation.visitor_name || current.conversation.visitor_email) && (
+                <div className="flex flex-col gap-1 text-sm"><p>Follow-up contact</p><p>{current.conversation.visitor_name}</p>
+                  {current.conversation.visitor_email && <a className="underline wrap-anywhere" href={`mailto:${current.conversation.visitor_email}`}>{current.conversation.visitor_email}</a>}
+                </div>
+              )}
               {current.conversation.status === "needs_attention" && (
                 <p className="text-xs text-muted-foreground">
                   Human assistance is required. Slack delivery does not confirm

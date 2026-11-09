@@ -45,6 +45,12 @@ async def events(user_id: User, request: Request):
                              headers={'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no'})
 
 
+@router.get('/inbox')
+def inbox(user_id: User, source: Literal['test', 'live'] = 'live', search: str = Query('', max_length=200),
+          status: Outcome | None = None, page: int = Query(1, ge=1, le=100000), widget_only: bool = False):
+    return activity.inbox(user_id, source, search.strip(), status, page, widget_only)
+
+
 @router.get('/conversations/{conversation_id}')
 def detail(conversation_id: UUID, user_id: User):
     return activity.detail(conversation_id, user_id)

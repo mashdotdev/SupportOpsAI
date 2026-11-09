@@ -12,6 +12,7 @@
     "test:agents": "bun test scripts/agents.test.mjs",
     "test:overview": "bun test scripts/overview.test.mjs",
     "test:integrations": "bun test scripts/integrations.test.mjs",
+    "test:widgets": "bun test scripts/widgets.test.mjs",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate deploy",

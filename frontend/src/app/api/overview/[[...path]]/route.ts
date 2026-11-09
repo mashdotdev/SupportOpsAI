@@ -8,7 +8,7 @@ async function handle(
 ) {
   const { path = [] } = await context.params;
   const route = path.join("/");
-  if (!/^(?:events|conversations\/[0-9a-f-]{36})?$/i.test(route)) {
+  if (!/^(?:events|inbox|conversations\/[0-9a-f-]{36})?$/i.test(route)) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
   const query = new URL(request.url).search;

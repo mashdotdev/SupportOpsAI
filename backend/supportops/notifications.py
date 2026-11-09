@@ -137,7 +137,13 @@ def enqueue_escalation(connection, conversation, question):
         return
     agent = connection.execute('SELECT * FROM ai_agents WHERE id=%s AND user_id=%s',
                                (conversation['agent_id'], conversation['user_id'])).fetchone()
-    if not agent or not agent['slack_notifications'] or agent['version'] != conversation['agent_version']:
+    if not agent or not agent['slack_notifications']:
+        return
+    if conversation.get('widget_revision_id'):
+        revision = connection.execute('SELECT agent FROM widget_revisions WHERE id=%s', (conversation['widget_revision_id'],)).fetchone()
+        if not revision or not revision['agent'].get('slack_notifications'):
+            return
+    elif agent['version'] != conversation['agent_version']:
         return
     destination = connection.execute('SELECT * FROM slack_connections WHERE user_id=%s FOR UPDATE',
                                      (conversation['user_id'],)).fetchone()

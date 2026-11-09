@@ -117,6 +117,13 @@ model AgentConversation {
   events       AgentActivityEvent[]
   escalationCycle Int @default(1) @map("escalation_cycle")
   notifications NotificationJob[]
+  widgetRevisionId String? @map("widget_revision_id") @db.Uuid
+  widgetRevision WidgetRevision? @relation(fields: [widgetRevisionId], references: [id])
+  visitorName String? @map("visitor_name") @db.Text
+  visitorEmail String? @map("visitor_email") @db.Text
+  pageOrigin String? @map("page_origin") @db.Text
+  customerFeedback String? @map("customer_feedback") @db.Text
+  widgetSession WidgetSession?
 
   @@unique([id, userId])
   @@index([userId, source, createdAt(sort: Desc)], map: "agent_conversations_owner_created_idx")
@@ -225,5 +232,65 @@ model NotificationAttempt {
   job NotificationJob @relation(fields:[jobId],references:[id],onDelete:Cascade)
   @@unique([jobId,number])
   @@map("notification_attempts")
+  @@schema("public")
+}
+
+model WebsiteWidget {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @unique @map("user_id") @db.Text
+  draft Json @default("{}") @db.JsonB
+  version Int @default(1)
+  enabled Boolean @default(false)
+  publishedRevisionId String? @map("published_revision_id") @db.Uuid
+  lastSeenAt DateTime? @map("last_seen_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  revisions WidgetRevision[] @relation("WidgetRevisions")
+  // The composite FK to the active revision is maintained in migration SQL.
+  sessions WidgetSession[]
+  @@unique([id,userId])
+  @@map("website_widgets")
+  @@schema("public")
+}
+
+model WidgetRevision {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  widgetId String @map("widget_id") @db.Uuid
+  userId String @map("user_id") @db.Text
+  number Int
+  configuration Json @db.JsonB
+  agent Json @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  widget WebsiteWidget @relation("WidgetRevisions", fields: [widgetId,userId], references: [id,userId], onDelete: Cascade)
+  conversations AgentConversation[]
+  @@unique([widgetId,number])
+  @@unique([id,widgetId,userId])
+  @@map("widget_revisions")
+  @@schema("public")
+}
+
+model WidgetSession {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  widgetId String @map("widget_id") @db.Uuid
+  userId String @map("user_id") @db.Text
+  conversationId String @unique @map("conversation_id") @db.Uuid
+  tokenHash String @unique @map("token_hash") @db.Text
+  siteOrigin String @map("site_origin") @db.Text
+  expiresAt DateTime @default(dbgenerated("now() + interval '7 days'")) @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  widget WebsiteWidget @relation(fields: [widgetId,userId], references: [id,userId], onDelete: Cascade)
+  conversation AgentConversation @relation(fields: [conversationId,userId], references: [id,userId], onDelete: Cascade)
+  @@unique([conversationId,userId])
+  @@index([widgetId,createdAt(sort: Desc)], map:"widget_sessions_widget_created_idx")
+  @@map("widget_sessions")
+  @@schema("public")
+}
+
+model WidgetRateLimit {
+  bucket String @db.Text
+  windowStart DateTime @map("window_start") @db.Timestamptz(6)
+  used Int @default(1)
+  @@id([bucket,windowStart])
+  @@map("widget_rate_limits")
   @@schema("public")
 }

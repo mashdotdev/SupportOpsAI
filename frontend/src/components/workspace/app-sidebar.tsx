@@ -17,6 +17,7 @@ import {
   UserRound,
   UsersRound,
   Workflow,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -63,6 +64,7 @@ const navigation: {
         href: "/workspace/conversations",
       },
       { label: "AI Agents", icon: Bot, href: "/workspace/ai-agent" },
+      { label: "Website Widget", icon: Globe, href: "/workspace/website-widget" },
       {
         label: "Knowledge Base",
         icon: Database,

@@ -10,8 +10,13 @@ from .config import settings
 @lru_cache
 def pool() -> ConnectionPool:
     settings().require("database_url")
-    return ConnectionPool(settings().database_url, min_size=0, max_size=5, open=True,
-                          timeout=10, kwargs={"row_factory": dict_row, "connect_timeout": 10})
+    # Idle connections can be closed by Postgres, its pooler, or the network.
+    # Validate at checkout so the pool replaces them before starting app work.
+    return ConnectionPool(
+        settings().database_url, min_size=0, max_size=5, open=True,
+        timeout=10, check=ConnectionPool.check_connection,
+        kwargs={"row_factory": dict_row, "connect_timeout": 10},
+    )
 
 
 @contextmanager
