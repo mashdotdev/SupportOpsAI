@@ -1,4 +1,5 @@
 from functools import lru_cache
+from collections import OrderedDict
 from pathlib import Path
 import threading
 
@@ -23,6 +24,9 @@ class Embedder:
         self.tokenizer.no_padding()
         self.model = TextEmbedding(model_name=MODEL, specific_model_path=str(path), local_files_only=True, threads=2)
         self.lock = threading.Lock()
+        # Cache vectors only, never retrieved passages or completed answers. Document
+        # generations and permissions are still rechecked on every retrieval.
+        self.query_cache = OrderedDict()
 
     def passages(self, texts):
         with self.lock:
@@ -35,7 +39,15 @@ class Embedder:
         if len(encoding.ids) > 460:
             text = text[:encoding.offsets[459][1]]
         with self.lock:
-            return next(self.model.query_embed(text)).tolist()
+            cached = self.query_cache.get(text)
+            if cached is None:
+                cached = tuple(next(self.model.query_embed(text)).tolist())
+                self.query_cache[text] = cached
+                if len(self.query_cache) > 128:
+                    self.query_cache.popitem(last=False)
+            else:
+                self.query_cache.move_to_end(text)
+            return list(cached)
 
 
 @lru_cache

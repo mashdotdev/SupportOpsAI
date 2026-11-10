@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     backend_api_token: str = ""
     openrouter_api_key: str = ""
     openrouter_model: str = "openrouter/free"
+    # Used only by the Agents SDK trace exporter, never for model inference.
+    openai_api_key: str = ""
+    openai_tracing_api_key: str = ""
+    openai_agents_disable_tracing: bool = False
+    openai_agents_trace_include_sensitive_data: bool = False
     qdrant_url: str = ""
     qdrant_api_key: str = ""
     qdrant_collection: str = "supportops_development_bge_small_v1"
@@ -21,6 +26,8 @@ class Settings(BaseSettings):
     frontend_origin: str = "http://localhost:3000"
     integration_encryption_key: str = ""
     widget_daily_model_requests: int = 45
+    chat_prefetch_knowledge: bool = True
+    chat_warmup_embeddings: bool = True
     embedding_model_path: str = "data/models/bge-small-en-v1.5"
     max_file_bytes: int = 20 * 1024 * 1024
 

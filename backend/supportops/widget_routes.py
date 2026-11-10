@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from . import activity, chat, widgets
 from .config import settings
 from .documents import User
+from .chat_timing import ChatTiming
 
 router = APIRouter(prefix='/v1/widgets', tags=['website-widget'])
 
@@ -100,11 +101,16 @@ PUBLIC_ERROR = 'We could not complete your answer. Please retry in a moment or c
 @public.post('/{widget_id}/messages')
 async def message(widget_id: UUID, body: Message, request: Request, x_widget_session: Token,
                   x_widget_site_origin: Site, x_widget_client_ip: IP = 'shared'):
-    prepared, agent, user_id, previous = await asyncio.to_thread(
-        widgets.prepare, widget_id, x_widget_session, x_widget_site_origin, body, x_widget_client_ip)
+    timing = ChatTiming(body.request_id, phase='delivery', channel='widget')
+    with timing.measure('prepare_ms'):
+        prepared, agent, user_id, previous = await asyncio.to_thread(
+            widgets.prepare, widget_id, x_widget_session, x_widget_site_origin, body, x_widget_client_ip)
     if previous:
         async def replay():
-            yield chat.event('done', {'id': previous['id'], 'text': previous['answer'], 'response_type': previous['response_type']})
+            state = await asyncio.to_thread(widgets.public_state, widget_id, x_widget_session, x_widget_site_origin)
+            timing.finish(replayed=True)
+            yield chat.event('done', {'id': previous['id'], 'text': previous['answer'], 'response_type': previous['response_type'],
+                'conversation_id': state['conversation_id'], 'conversation_status': state['status']})
         return StreamingResponse(replay(), media_type='text/event-stream')
 
     async def generate():
@@ -135,17 +141,19 @@ async def message(widget_id: UUID, body: Message, request: Request, x_widget_ses
                     raise RuntimeError('Answer unavailable')
                 elif kind == 'event: done':
                     # Recheck pause, domain revocation and knowledge access before delivery.
-                    await asyncio.to_thread(widgets.public_state, widget_id, x_widget_session, x_widget_site_origin)
-                    permitted = await asyncio.to_thread(widgets.document_scope, agent, user_id)
-                    if any(str(citation['document_id']) not in permitted for citation in payload.get('citations', [])):
-                        raise RuntimeError('Knowledge access changed before delivery')
-                    text = re.sub(r'\[S\d+\]', '', payload['text']).strip()
-                    if payload.get('response_type') in {'escalation', 'out_of_scope', 'insufficient_knowledge'}:
-                        text = 'A member of the support team needs to help with this. You can leave your contact details below for follow-up.'
-                    await asyncio.to_thread(activity.finish_turn, prepared.conversation_id, prepared.request_id,
-                        user_id, text=text, citations=[], response_type=payload.get('response_type', 'answer'))
+                    with timing.measure('finalization_ms'):
+                        with timing.measure('delivery_access_ms'):
+                            await asyncio.to_thread(widgets.validate_delivery, widget_id, x_widget_session,
+                                x_widget_site_origin, agent, user_id, payload.get('citations', []))
+                        text = re.sub(r'\[S\d+\]', '', payload['text']).strip()
+                        if payload.get('response_type') in {'escalation', 'out_of_scope', 'insufficient_knowledge'}:
+                            text = 'A member of the support team needs to help with this. You can leave your contact details below for follow-up.'
+                        response_type = payload.get('response_type', 'answer')
+                        await asyncio.to_thread(activity.finish_turn, prepared.conversation_id, prepared.request_id,
+                            user_id, text=text, citations=[], response_type=response_type)
                     finalized = True
-                    yield chat.event('done', {'id': str(prepared.request_id), 'text': text, 'response_type': payload.get('response_type', 'answer')})
+                    yield chat.event('done', {'id': str(prepared.request_id), 'text': text, 'response_type': response_type,
+                        'conversation_id': str(prepared.conversation_id), 'conversation_status': activity.outcome(response_type)[0]})
                     break
         except asyncio.CancelledError:
             raise
@@ -154,6 +162,7 @@ async def message(widget_id: UUID, body: Message, request: Request, x_widget_ses
             finalized = True
             yield chat.event('error', {'error': PUBLIC_ERROR})
         finally:
+            timing.finish(finalized=finalized)
             task.cancel()
             try:
                 await task

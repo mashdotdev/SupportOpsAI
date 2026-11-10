@@ -1,5 +1,6 @@
 import logging
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -14,8 +15,18 @@ from supportops.agent_routes import router as agent_router
 from supportops.overview_routes import router as overview_router
 from supportops.integration_routes import router as integration_router
 from supportops.widget_routes import router as widget_router, public as public_widget_router
+from supportops import chat
+from supportops.chat_timing import configure_logging
 
-app = FastAPI(title="SupportOps AI Backend", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app):
+    configure_logging()
+    async with chat.runtime():
+        yield
+
+
+app = FastAPI(title="SupportOps AI Backend", version="1.0.0", lifespan=lifespan)
 app.include_router(document_router)
 app.include_router(chat_router)
 app.include_router(agent_router)

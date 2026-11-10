@@ -16,7 +16,7 @@ from pydantic import ValidationError
 from qdrant_client import QdrantClient, models
 
 from main import app
-from supportops import agent_models, agent_store, chat, db, documents, vectors
+from supportops import agent_models, agent_store, chat, db, documents, vectors, knowledge_access
 from supportops.config import Settings
 
 
@@ -95,9 +95,13 @@ class AgentRuntimeTests(unittest.TestCase):
         async def run():
             client = AsyncOpenAI(api_key="fixture-key", base_url="https://openrouter.ai/api/v1", http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(handler)), max_retries=0)
             queue = asyncio.Queue()
-            checks = [scope, ValueError("Agent changed")] if final_scope_error else None
+            def final_sources(owner, sources, agent):
+                if final_scope_error:
+                    raise ValueError("Agent changed")
+                return [item for item in sources if scope is None or item['document_id'] in scope]
             with patch.object(chat, "settings", return_value=config), patch.object(chat, "AsyncOpenAI", return_value=client), \
-                 patch.object(agent_store, "current_document_scope", side_effect=checks, return_value=scope), \
+                 patch.object(agent_store, "current_document_scope", return_value=scope), \
+                 patch.object(knowledge_access, 'valid_sources', side_effect=final_sources), \
                  patch.object(vectors, "search", return_value=[source] if source else []) as search, \
                  patch.object(chat, "valid_sources", side_effect=lambda owner, sources, selected: [item for item in sources if selected is None or item["document_id"] in selected]):
                 await chat.answer(chat.ChatInput(messages=[chat.ChatMessage(role="user", content="Test request")]), "alice", queue, agent)

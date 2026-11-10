@@ -79,7 +79,7 @@ Never expose these values through `NEXT_PUBLIC_` variables.
 
 The default model is `openrouter/free`. A configured `:free` model must exist in
 OpenRouter's catalog, have zero prompt/completion pricing, and support tools and
-tool choice. No paid fallback list is sent. OpenAI tracing is disabled. Free
+tool choice. No paid fallback list is sent. OpenAI tracing is optional (see below). Free
 capacity and shared account quotas can interrupt chat; retries are user initiated.
 OpenRouter receives questions, recent chat context, and retrieved policy passages.
 An empty knowledge base (including files still indexing) returns upload/readiness
@@ -328,7 +328,140 @@ With `TEST_DATABASE_URL`, it also tests real CRUD, update conflicts, cross-user
 permissions, soft-deleted files, empty scopes, and Qdrant document filtering.
 It never calls a live model. Use the same isolated-database requirements below.
 
+## OpenAI agent tracing
+
+The Agents SDK can export traces to the [OpenAI Traces dashboard](https://platform.openai.com/traces)
+while inference continues to use free OpenRouter models. Configure only the backend:
+
+```env
+OPENAI_TRACING_API_KEY=your-openai-project-api-key
+OPENAI_AGENTS_DISABLE_TRACING=false
+OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA=false
+```
+
+Restart the API after changing environment settings. The exporter explicitly uses
+`OPENAI_TRACING_API_KEY` (falling back to `OPENAI_API_KEY`); it never replaces the
+OpenRouter inference key/client. Prefer the dedicated variable when an IDE/shell
+already exports a different `OPENAI_API_KEY`. No OpenAI key is sent to the browser. Without a key,
+or with `OPENAI_AGENTS_DISABLE_TRACING=true`, chat continues with tracing disabled.
+
+Each new answer has one trace named `SupportOps playground chat` or
+`SupportOps widget chat`, grouped by conversation ID, with request/model/version
+metadata. SDK spans show agent execution, model generations, and tool calls.
+Application spans also show the initial retrieval performed before generation,
+model/source validation, final response type, errors/cancellation, and timings.
+Timing logs include the trace ID for correlation. Tracing shows recorded operations;
+it does not reveal a model's private internal reasoning. Slack delivery runs in its
+separate notification worker and is not an agent tool call in these traces.
+
+Set `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA=true` to inspect prompts, replies,
+tool arguments/results, and retrieved document passages. This uploads that content
+to OpenAI; keep it `false` when you only need operations, counts, and timings.
+The local development setting may enable content capture explicitly; the application
+default and example environment keep it disabled. Trace metadata does not include
+visitor names, emails, tokens, webhook credentials, or API keys.
+
+The SDK's background batch exporter keeps export off the response path. Pending
+traces flush on graceful shutdown. Export authentication/network failures do not
+switch providers or fail customer answers; inspect SDK exporter logs if traces do
+not appear. Allow a short delay after a completed chat, and select the OpenAI project
+associated with the trace key in the dashboard. Replayed completed requests do not
+rerun the agent and therefore do not create a new answer trace.
+
+Run `uv run python -m unittest tests.test_agent_tracing -v` for fixture-only tracing
+checks. These use an in-memory processor and never export test/customer data.
+
 ## Tests
+
+### Chat latency and quality
+
+The knowledge-base playground, saved-agent playground, and website widget share
+the same retrieval-first pipeline. A fresh, permission-scoped search is supplied
+as a tool result before generation, so a normal factual answer needs one provider
+request. One refinement search remains available. Authority rules, citation/source
+checks, publication/domain revocation, final persistence, and free-only routing
+remain enforced. The three-request per-turn widget quota reservation remains a
+conservative upper bound for unusual tool continuations.
+
+The API lifespan reuses the OpenRouter HTTP pool and warms the packaged embedding
+model. Query vectors use a bounded, in-memory cache; passages, permissions, and
+answers are not cached. The widget applies the committed `done` event immediately;
+history/notification synchronization runs independently. Playground replies also
+hold drafts until source validation completes.
+
+`CHAT_PREFETCH_KNOWLEDGE=true` and `CHAT_WARMUP_EMBEDDINGS=true` are the defaults;
+no migration or reindexing is needed. Set the first to `false` for a temporary
+comparison or rollback. Restart the API to reload environment changes.
+
+`chat_timing` JSON log entries correlate preparation, model validation, retrieval,
+model processing, first model text, source checks, and finalization using the
+request ID. Internal first-model-text time is not customer-visible answer time.
+Retrieval logs additionally separate embedding, vector-service, and source-check
+time. Logs contain timings/identifiers/counts, not customer messages or passages.
+The dashboard median retains its existing completed-turn definition; compare it
+with browser send-to-visible time and collect more than two samples.
+
+Run the synthetic quality/latency benchmark explicitly (consumes free quota):
+
+```sh
+uv run python -m supportops.evaluate --compare --output data/chat-performance.json
+# Pin a currently available free model; repeat --model to compare candidates.
+uv run python -m supportops.evaluate --model VENDOR/MODEL:free --compare --repeats 2
+```
+
+It checks supported, unrelated, conflicting, follow-up, and injected-policy cases,
+and reports quality passes, median/max duration, provider calls, and the SDK's model
+identifier (which may remain the router ID when using `openrouter/free`).
+It never edits agents or app data. Retrieval is synthetic, so these numbers isolate
+the provider/pipeline and exclude real DB/vector/tunnel/browser latency. Using
+`openrouter/free` may choose different models between requests; pin a model for
+comparisons. Review correctness and escalation behavior before changing an agent's
+selected model, and benchmark a production build outside the development tunnel.
+
+On 2026-11-10, the configured `nvidia/nemotron-3.5-super-vl:free` passed all five
+synthetic cases in both paths: median 2.33s/11 calls total with tool-first versus
+1.41s/5 calls total with retrieval-first. This is a small provider-only sample,
+not a promise of end-to-end response time.
+
+### Retrieval and authorization round trips
+
+The next optimization pass keeps permissions live rather than caching them.
+Saved-agent scope is read in one statement. Final validation combines current
+agent version/scope, document ownership/readiness, and active indexing generations
+in one statement and one pool checkout. Widget checks intersect the immutable
+snapshot's approved documents with the current draft and current agent permissions.
+Published snapshots remain valid across ordinary agent edits, while restrictions,
+deleted agents, and paused/unpublished widgets are enforced immediately.
+
+Widget delivery uses one combined access query for publication/pause, exact domain,
+hashed session token/expiry, and document access. It avoids fetching the whole
+conversation history merely to recheck access. Customer history endpoints retain
+their existing behavior. Empty evidence never skips the agent/version/pause check.
+
+Pool connections use autocommit for single-statement reads, avoiding extra
+`BEGIN`/`COMMIT` round trips. Every write path still uses an explicit transaction;
+rollback, atomic escalation/outbox writes, and idle-connection health checks remain
+enabled. No database migration or reindex is required. Restart the API and workers
+to replace existing connection pools with the updated configuration.
+
+New retrieval trace children are `knowledge_scope`, `retrieval_generations`,
+`embedding`, `vector_search`, `retrieval_source_validation`, `knowledge_access_query`,
+and `database_checkout`. They distinguish model time from pool/network wait, scope
+lookup, embeddings, and Qdrant time. These are measurements, not new retrieval
+timeouts. Final authorization is still performed after generation.
+
+For the next measurement, send the same question with the same selected model and
+document set after restart. Compare `retrieval_ms`, `knowledge_scope_ms`,
+`source_validation_ms`, `model_ms`, and `model_requests` in `timing_summary`, plus
+the detailed child spans. Measure several warm turns and keep the first cold turn
+separate. Backend delivery/finalization logs capture work outside the answer trace;
+browser send-to-visible timing remains the end-to-end measure.
+
+The free-model evaluation command accepts repeated `--model` options and records
+per-case model/retrieval/validation timings, quality results, median/max, and
+nearest-rank p95. It does not change any saved agent or published widget model.
+Only change a model after comparing quality and latency on the same questions;
+small samples and synthetic retrieval do not establish production p95 latency.
 
 ```sh
 uv run python -m unittest discover -s tests -v

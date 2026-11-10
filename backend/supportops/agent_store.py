@@ -109,7 +109,5 @@ def save_agent(body, user_id, agent_id=None):
 
 def current_document_scope(agent_id, user_id, version):
     """Recheck scope on every search/finalization, including concurrent edits/deletes."""
-    row = get_agent(agent_id, user_id)
-    if row["version"] != version:
-        raise ValueError("This agent changed while answering. Start a fresh conversation using the saved configuration.")
-    return None if row["knowledge_mode"] == "all" else row["document_ids"]
+    from .knowledge_access import document_scope
+    return document_scope({'id': agent_id, 'version': version}, user_id)

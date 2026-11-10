@@ -8,8 +8,10 @@ from qdrant_client import QdrantClient, models
 from .config import settings
 from .db import ready_generations, valid_sources
 from .embeddings import DIMENSIONS, embedder
+from .chat_timing import current_request_id
+from . import agent_tracing
 
-log = logging.getLogger("supportops.retrieval")
+log = logging.getLogger("supportops.chat.performance.retrieval")
 
 
 @lru_cache
@@ -91,11 +93,13 @@ def remove(user_id, document_id, generation=None):
 
 def search(user_id, query, document_ids=None):
     started = time.monotonic()
-    generations = (
-        ready_generations(user_id)
-        if document_ids is None
-        else ready_generations(user_id, document_ids)
-    )
+    with agent_tracing.stage("retrieval_generations") as detail:
+        generations = (
+            ready_generations(user_id)
+            if document_ids is None
+            else ready_generations(user_id, document_ids)
+        )
+        detail['generation_count'] = len(generations)
     if not generations:
         return []
     query_filter = scope(user_id)
@@ -109,26 +113,40 @@ def search(user_id, query, document_ids=None):
                 match=models.MatchAny(any=list(map(str, document_ids))),
             )
         )
-    hits = (
-        client()
-        .query_points(
-            settings().qdrant_collection,
-            query=embedder().query(query),
-            query_filter=query_filter,
-            limit=8,
-            with_payload=True,
+    scope_ms = (time.monotonic() - started) * 1000
+    embedding_started = time.monotonic()
+    with agent_tracing.stage("embedding"):
+        vector = embedder().query(query)
+    embedding_ms = (time.monotonic() - embedding_started) * 1000
+    query_started = time.monotonic()
+    with agent_tracing.stage("vector_search") as detail:
+        hits = (
+            client()
+            .query_points(
+                settings().qdrant_collection,
+                query=vector,
+                query_filter=query_filter,
+                limit=8,
+                with_payload=True,
+            )
+            .points
         )
-        .points
-    )
+        detail['candidate_count'] = len(hits)
+    vector_ms = (time.monotonic() - query_started) * 1000
+    validation_started = time.monotonic()
     candidates = [hit.payload for hit in hits if hit.payload]
-    result = (
-        valid_sources(user_id, candidates)
-        if document_ids is None
-        else valid_sources(user_id, candidates, document_ids)
-    )[:8]
+    with agent_tracing.stage("retrieval_source_validation") as detail:
+        result = (
+            valid_sources(user_id, candidates)
+            if document_ids is None
+            else valid_sources(user_id, candidates, document_ids)
+        )[:8]
+        detail['permitted_count'] = len(result)
     log.info(
-        "retrieval duration_ms=%d hits=%d",
+        "retrieval request_id=%s duration_ms=%d scope_ms=%d embedding_ms=%d vector_ms=%d validation_ms=%d hits=%d",
+        current_request_id.get(),
         (time.monotonic() - started) * 1000,
+        scope_ms, embedding_ms, vector_ms, (time.monotonic() - validation_started) * 1000,
         len(result),
     )
     return result

@@ -1,10 +1,11 @@
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from functools import lru_cache
 
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
 from .config import settings
+from . import agent_tracing
 
 
 @lru_cache
@@ -15,13 +16,23 @@ def pool() -> ConnectionPool:
     return ConnectionPool(
         settings().database_url, min_size=0, max_size=5, open=True,
         timeout=10, check=ConnectionPool.check_connection,
-        kwargs={"row_factory": dict_row, "connect_timeout": 10},
+        kwargs={"row_factory": dict_row, "connect_timeout": 10, "autocommit": True},
     )
 
 
 @contextmanager
+def read_connection():
+    # Single-statement reads need no BEGIN/COMMIT network round trips. Pool health
+    # checks still run at checkout; writes continue to use explicit transactions.
+    with ExitStack() as stack:
+        with agent_tracing.stage("database_checkout"):
+            connection = stack.enter_context(pool().connection())
+        yield connection
+
+
+@contextmanager
 def transaction():
-    with pool().connection() as connection:
+    with read_connection() as connection:
         with connection.transaction():
             yield connection
 
@@ -41,7 +52,7 @@ def owned(connection, document_id, user_id, *, lock=False):
 def valid_sources(user_id: str, sources: list[dict], document_ids=None) -> list[dict]:
     if not sources:
         return []
-    with transaction() as connection:
+    with read_connection() as connection:
         rows = connection.execute(
             "SELECT id, active_generation FROM knowledge_documents WHERE user_id=%s AND status='ready' AND id=ANY(%s::uuid[])",
             (user_id, list({s["document_id"] for s in sources}))).fetchall()
@@ -52,7 +63,7 @@ def valid_sources(user_id: str, sources: list[dict], document_ids=None) -> list[
 
 
 def ready_generations(user_id: str, document_ids=None) -> list[str]:
-    with transaction() as connection:
+    with read_connection() as connection:
         rows = connection.execute("SELECT active_generation FROM knowledge_documents WHERE user_id=%s AND status='ready'"
                                   + (" AND id=ANY(%s::uuid[])" if document_ids is not None else ""),
                                   (user_id, document_ids) if document_ids is not None else (user_id,)).fetchall()

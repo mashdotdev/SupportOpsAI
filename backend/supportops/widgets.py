@@ -246,16 +246,13 @@ def public_state(widget_id, token, site):
 
 
 def document_scope(agent, user_id):
-    with transaction() as connection:
-        revision = connection.execute('SELECT widget_id,agent FROM widget_revisions WHERE id=%s AND user_id=%s', (agent['_widget_revision_id'], user_id)).fetchone()
-        if not revision:
-            raise ValueError('Chat configuration is unavailable.')
-        widget = published(connection, revision['widget_id'])
-        current = agent_store.find(connection, agent['id'], user_id)
-        permitted = set(revision['agent']['document_ids']) & set(widget['draft'].get('document_ids', []))
-        if current['knowledge_mode'] == 'selected':
-            permitted &= set(current['document_ids'])
-        return list(permitted)
+    from .knowledge_access import document_scope as fresh_scope
+    return fresh_scope(agent, user_id)
+
+
+def validate_delivery(widget_id, token, site, agent, user_id, citations):
+    from .knowledge_access import validate_widget_delivery
+    return validate_widget_delivery(widget_id, token, origin(site), agent, user_id, citations)
 
 
 def prepare(widget_id, token, site, body, ip):

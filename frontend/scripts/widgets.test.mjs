@@ -11,6 +11,7 @@ mock.module("../src/lib/auth/server.ts", () => ({
 }));
 const publicAPI = await import("../src/app/api/widget/[...path]/route.ts");
 const ownerAPI = await import("../src/app/api/widgets/[[...path]]/route.ts");
+const { completeWidgetTurn } = await import("../src/lib/widget-client.ts");
 const originalFetch = globalThis.fetch;
 const originalEnv = {
   BACKEND_URL: process.env.BACKEND_URL,
@@ -21,6 +22,22 @@ const originalEnv = {
 };
 const id = "12345678-1234-1234-1234-123456789abc";
 const context = (...path) => ({ params: Promise.resolve({ path }) });
+
+test("committed answers display without a history request, and retries do not duplicate turns", () => {
+  const result = { id, text: "Refunds within 30 days.", response_type: "answer",
+    conversation_id: "conversation", conversation_status: "answered" };
+  const state = completeWidgetTurn(null, result, "Refund policy?");
+  expect(state.turns[0].answer).toBe(result.text);
+  expect(state.status).toBe("answered");
+  const replay = completeWidgetTurn(state, result, "Refund policy?");
+  expect(replay.turns).toHaveLength(1);
+  const escalation = completeWidgetTurn(state, { ...result, id: "second", response_type: "escalation",
+    conversation_status: "needs_attention", text: "Contact support." }, "Help");
+  expect(escalation.status).toBe("needs_attention");
+  expect(escalation.notification_status).toBeNull();
+  expect(escalation.turns).toHaveLength(2);
+  expect(() => completeWidgetTurn(state, { text: "incomplete" }, "Help")).toThrow();
+});
 function configure() {
   process.env.BACKEND_URL = "https://backend.test";
   process.env.BACKEND_API_TOKEN = "private-service-token";

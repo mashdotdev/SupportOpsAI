@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { jsonResponse, readEvents } from "@/lib/rag-client";
 import {
   notificationMessage,
+  completeWidgetTurn,
   type PublicWidget,
   type VisitorConversation,
 } from "@/lib/widget-client";
@@ -48,6 +49,7 @@ export function WidgetChat() {
   const busy = useRef(false);
   const bottom = useRef<HTMLDivElement>(null);
   const mounted = useRef(true);
+  const stateVersion = useRef(0);
   const hasRunningTurn =
     conversation?.turns.some((turn) => turn.status === "running") || false;
 
@@ -77,10 +79,11 @@ export function WidgetChat() {
 
   const refresh = useCallback(async () => {
     const expectedToken = token.current;
+    const expectedVersion = stateVersion.current;
     const state = await api("conversation").then(
       jsonResponse<VisitorConversation>,
     );
-    if (mounted.current && token.current === expectedToken)
+    if (mounted.current && token.current === expectedToken && stateVersion.current === expectedVersion)
       setConversation(state);
     return state;
   }, [api]);
@@ -217,6 +220,7 @@ export function WidgetChat() {
   async function send(message: string, retry = false, requestId?: string) {
     if (!message.trim() || busy.current || !ready) return;
     busy.current = true;
+    stateVersion.current += 1;
     setPending(true);
     setError("");
     setStatus("Thinking…");
@@ -239,12 +243,20 @@ export function WidgetChat() {
       for await (const event of readEvents(response.body)) {
         if (event.type === "status") setStatus(String(event.data.message));
         if (event.type === "error") throw new Error(String(event.data.error));
-        if (event.type === "done") done = true;
+        if (event.type === "done") {
+          stateVersion.current += 1;
+          // Validate outside the updater so a malformed response follows retry recovery.
+          completeWidgetTurn(null, event.data, next.message);
+          setConversation((current) => completeWidgetTurn(current, event.data, next.message));
+          setDraft(null);
+          done = true;
+          break;
+        }
       }
       if (!done)
         throw new Error("Your answer was interrupted. Retry to recover it.");
-      await refresh();
-      setDraft(null);
+      // A slow or failed history refresh cannot hide an already committed answer.
+      void refresh().catch(() => {});
     } catch (error) {
       setError(
         error instanceof Error
@@ -278,6 +290,7 @@ export function WidgetChat() {
     event?.preventDefault();
     if (busy.current || !ready) return;
     busy.current = true;
+    stateVersion.current += 1;
     setPending(true);
     setError("");
     try {

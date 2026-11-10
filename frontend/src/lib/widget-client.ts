@@ -67,6 +67,41 @@ export type VisitorConversation = {
   feedback: string | null;
 };
 
+// Delivered only after the server validates access and commits the answer.
+export function completeWidgetTurn(
+  current: VisitorConversation | null,
+  result: Record<string, unknown>,
+  question: string,
+): VisitorConversation {
+  if (
+    typeof result.id !== "string" ||
+    typeof result.text !== "string" ||
+    typeof result.conversation_id !== "string" ||
+    typeof result.conversation_status !== "string" ||
+    typeof result.response_type !== "string"
+  ) throw new Error("The completed response was invalid. Please retry.");
+  const state = current?.conversation_id === result.conversation_id ? current : null;
+  const turn = {
+    id: result.id,
+    question,
+    answer: result.text,
+    status: "completed",
+    response_type: result.response_type,
+  };
+  const turns = state?.turns || [];
+  return {
+    conversation_id: result.conversation_id,
+    status: result.conversation_status,
+    turns: turns.some((item) => item.id === turn.id)
+      ? turns.map((item) => item.id === turn.id ? turn : item)
+      : [...turns, turn].slice(-100),
+    notification_status: state?.notification_status || null,
+    visitor_name: state?.visitor_name || "",
+    visitor_email: state?.visitor_email || "",
+    feedback: state?.feedback || null,
+  };
+}
+
 export function notificationMessage(status: string | null) {
   if (status === "sent")
     return "The support team has been notified. Leave your contact details for follow-up.";
