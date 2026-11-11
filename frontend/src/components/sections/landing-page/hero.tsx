@@ -198,10 +198,10 @@ export const Hero = () => {
                 <div className="flex w-full min-w-0 flex-col gap-6 lg:w-auto lg:shrink-0">
                   <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:flex-wrap">
                     <Link
-                      href="#demo"
-                      className="inline-flex min-h-10 items-center justify-center gap-3 font-satoshi rounded-xs bg-my-blue px-4 py-2.5 text-xs font-semibold text-my-white transition-colors hover:bg-[#CCFF00]/75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
+                      href="/workspace"
+                      className="inline-flex min-h-10 items-center justify-center gap-3 font-satoshi rounded-xs bg-my-blue px-4 py-2.5 text-xs font-semibold text-my-white transition-colors hover:bg-my-blue/75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7DBBC3]"
                     >
-                      Explore the live demo
+                      Go to workspace
                       <IoArrowUpOutline
                         aria-hidden="true"
                         className="size-3.5 rotate-45"

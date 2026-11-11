@@ -47,7 +47,7 @@ export const Navbar = () => {
             <Link
               key={item.title}
               href={item.href}
-              className="rounded-sm py-3 transition-colors hover:text-black/70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#faf5ef]"
+              className="rounded-sm py-3 transition-colors hover:text-white/70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#faf5ef]"
             >
               <span className="uppercase text-sm font-medium font-satoshi">
                 {item.title}
