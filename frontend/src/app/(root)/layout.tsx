@@ -58,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Navbar />
         <Footer />
       </body>
-      <GoogleAnalytics gaId="GTM-NLP8LJH4"/>
+      <GoogleAnalytics gaId={process.env.GOOGLE_ANALYTICS_MEASUREMENT_ID!} />
     </html>
   );
 }
